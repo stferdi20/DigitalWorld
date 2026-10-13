@@ -26,6 +26,7 @@ Every candidate below needs its license checked before we commit to it. Digimon 
 - Static portraits for the UI panel: digi-api.com (`/api/v1/digimon/{name}`) returns images, levels and evolution data. We can also use that API to seed the roster.
 
 **Environment (NDS Digital World, not LimeZu)**
+- **Main look: Digimon World Dusk.** Fill gaps from Dawn (same engine and art) and then Digimon World DS.
 - Tilesets from **Digimon World DS** and **Digimon World Dawn & Dusk** (The Spriters Resource, plus map rips). The Digimon Center / tamer HQ interiors become the office. The **Digi-Farm** maps (fields, fences, farm terrain types) become the surrounding farms.
 - Optional extras: Digimon Story: Lost Evolution and Digimon World DS town/building tiles.
 - Rips get re-sliced to a **16px tile grid** and exported as Tiled tilesets.
@@ -53,7 +54,13 @@ Every candidate below needs its license checked before we commit to it. Digimon 
 - The office is where agents work; the farms are where they idle, rest, train and hatch. Idle agents walk out to the farm that matches their type (dark, machine, or nursery).
 - Tiled layers: `floor`, `walls`, `furniture`, `furniture_top` (drawn above sprites), `collision`, and an object layer `spots` with desk seats, farm spots, the evolution pad and nursery spots.
 - Each spot has `{id, facing, zone}`.
-- The camera follows the selected agent or shows the whole world. The office interior can be a separate scene you enter through the door, NDS-style.
+- The camera follows the selected agent or shows the whole world.
+- **Sims-style view toggles** (one continuous map, no scene switch):
+  - **Roof:** on, off, or auto (the roof fades out when the camera zooms in or hovers over the office).
+  - **Walls:** full, cutaway (front-facing walls drop to a short stub so you can see inside), or hidden.
+  - **Floors:** if the office grows to several storeys, a floor selector (▲/▼) shows one storey at a time and dims the ones above. It starts with 1–2 storeys.
+  - Implementation: separate Tiled layers per storey (`f1_floor`, `f1_walls_back`, `f1_walls_front`, `f1_walls_front_cut`, `f1_roof`, …). Toggles only change layer visibility and alpha with a short tween. Sprites on hidden storeys are hidden too.
+  - Hotkeys: `R` roof, `W` walls cycle, `PgUp/PgDn` storey.
 
 ## 3b. Universal sprite format (for future Mega Man / Pokémon packs)
 
@@ -151,5 +158,4 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 
 ## 10. Open questions
 
-- Interior: should the office be a separate scene you enter through a door, or one continuous map with the roof cut away?
-- Which DS game's look should lead (World DS, Dawn & Dusk, or Story: Lost Evolution)?
+- None blocking. Next step: M0 (assets and sprite manifest).
