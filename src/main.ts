@@ -4,6 +4,7 @@ import { mountUI } from './ui';
 
 const scene = new OfficeScene();
 scene.onReady = () => mountUI(scene);
+(window as unknown as { office: OfficeScene }).office = scene; // handy for debugging in devtools
 new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',

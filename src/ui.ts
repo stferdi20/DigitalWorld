@@ -14,6 +14,7 @@ export function mountUI(scene: OfficeScene) {
     <span id="stats"></span>
     <button id="roof" title="R"></button>
     <button id="walls" title="W"></button>
+    <span><button id="st-dn" title="PgDn">▼</button> <b id="storey"></b> <button id="st-up" title="PgUp">▲</button></span>
     <button id="speed"></button>
     <label><input type="checkbox" id="dark" checked> dark digivolution</label>
   </div>
@@ -81,6 +82,8 @@ export function mountUI(scene: OfficeScene) {
   };
   $('#roof').onclick = () => scene.cycleRoof();
   $('#walls').onclick = () => scene.cycleWalls();
+  $('#st-up').onclick = () => scene.setStorey(scene.viewStorey + 1);
+  $('#st-dn').onclick = () => scene.setStorey(scene.viewStorey - 1);
   $('#speed').onclick = () => { scene.speed = ({ 1: 2, 2: 4, 4: 1 } as Record<number, number>)[scene.speed]; refresh(); };
   $<HTMLInputElement>('#dark').onchange = (e) => { scene.darkEvolution = (e.target as HTMLInputElement).checked; };
 
@@ -92,9 +95,10 @@ export function mountUI(scene: OfficeScene) {
     $('#stats').textContent = `agents ${agents.length} · working ${agents.filter((a) => a.task).length}`;
     $('#roof').textContent = `Roof: ${scene.roofMode}`;
     $('#walls').textContent = `Walls: ${scene.wallMode}`;
+    $('#storey').textContent = scene.viewStorey === 2 ? 'Floor 2 · Executive' : 'Floor 1 · Main';
     $('#speed').textContent = `Speed: ${scene.speed}x`;
     $('#list').innerHTML = agents.map((a) => `<div class="row ${a === scene.selected ? 'sel' : ''}" data-id="${a.id}">
-      ${esc(a.name)} · ${esc(a.form.name)} <span class="st ${a.state}">${a.state}</span></div>`).join('');
+      ${esc(a.name)} · ${esc(a.form.name)} <small>F${a.storey}</small> <span class="st ${a.state}">${a.state}</span></div>`).join('');
     $('#list').querySelectorAll<HTMLElement>('.row').forEach((r) => (r.onclick = () => {
       const a = scene.agents.get(r.dataset.id!); if (!a) return;
       scene.select(a); scene.cameras.main.pan(a.sprite.x, a.sprite.y, 400);

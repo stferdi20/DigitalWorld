@@ -10,7 +10,7 @@ export const TILE = 16;
 export const W = 80, H = 56;
 
 export interface Rect { x: number; y: number; w: number; h: number; }
-export interface Spot { id: string; x: number; y: number; facing: Facing; zone: Zone; kind: 'desk' | 'meeting' | 'evolve'; }
+export interface Spot { id: string; x: number; y: number; facing: Facing; zone: Zone; kind: 'desk' | 'meeting' | 'evolve'; storey: number; }
 
 export const OFFICE: Rect = { x: 30, y: 19, w: 21, h: 16 };
 export const ZONES: Record<Exclude<Zone, 'office'>, Rect> = {
@@ -36,9 +36,18 @@ export interface WorldLayers {
   roof: Phaser.GameObjects.Container;
 }
 
+/** Interior layers of one office storey (storey 1 also owns the outdoor world). */
+export interface Storey {
+  level: number;
+  layers: Phaser.GameObjects.Graphics[];   // shown only while this storey is viewed
+  walkable: boolean[][];                   // [y][x]
+}
+
 export interface World {
   layers: WorldLayers;
-  walkable: boolean[][];   // [y][x]
+  walkable: boolean[][];   // storey 1 grid (= storeys[0].walkable)
+  storeys: Storey[];
+  stairs: { x: number; y: number };
   spots: Spot[];
   doors: { x: number; y: number }[];
 }
@@ -139,7 +148,7 @@ export function buildWorld(scene: Phaser.Scene): World {
       furniture.fillStyle(0x7dff9a).fillRect(px(col) + 21, px(row) - 1, 8, 5);
       block(col, row); block(col + 1, row);
       // One seat per desk: Dusk sprites are 2 tiles wide, so neighbours would overlap.
-      spots.push({ id: `desk-${++n}`, x: col, y: row + 1, facing: 'up', zone: 'office', kind: 'desk' });
+      spots.push({ id: `desk-${++n}`, x: col, y: row + 1, facing: 'up', zone: 'office', kind: 'desk', storey: 1 });
     }
   }
   // meeting table
@@ -147,14 +156,14 @@ export function buildWorld(scene: Phaser.Scene): World {
   furniture.fillStyle(0x5a3a6a).fillRect(px(tx), px(ty), px(2), px(4));
   for (let y = ty; y < ty + 4; y++) { block(tx, y); block(tx + 1, y); }
   for (let y = ty; y < ty + 4; y++) {
-    spots.push({ id: `meet-${y}-l`, x: tx - 1, y, facing: 'right', zone: 'office', kind: 'meeting' });
-    spots.push({ id: `meet-${y}-r`, x: tx + 2, y, facing: 'left', zone: 'office', kind: 'meeting' });
+    spots.push({ id: `meet-${y}-l`, x: tx - 1, y, facing: 'right', zone: 'office', kind: 'meeting', storey: 1 });
+    spots.push({ id: `meet-${y}-r`, x: tx + 2, y, facing: 'left', zone: 'office', kind: 'meeting', storey: 1 });
   }
   // evolution pad in the training farm
   const ev = { x: ZONES.training.x + 12, y: ZONES.training.y + 6 };
-  furniture.fillStyle(0xffffff, 0.25).fillCircle(px(ev.x) + 8, px(ev.y) + 8, 14);
-  furniture.lineStyle(2, 0xffd84a).strokeCircle(px(ev.x) + 8, px(ev.y) + 8, 14);
-  spots.push({ id: 'evolve-pad', x: ev.x, y: ev.y, facing: 'down', zone: 'training', kind: 'evolve' });
+  ground.fillStyle(0xffffff, 0.25).fillCircle(px(ev.x) + 8, px(ev.y) + 8, 14);
+  ground.lineStyle(2, 0xffd84a).strokeCircle(px(ev.x) + 8, px(ev.y) + 8, 14);
+  spots.push({ id: 'evolve-pad', x: ev.x, y: ev.y, facing: 'down', zone: 'training', kind: 'evolve', storey: 1 });
 
   // --- roof (container so it can fade as a whole)
   const roofG = scene.add.graphics();
@@ -165,7 +174,89 @@ export function buildWorld(scene: Phaser.Scene): World {
     { fontFamily: 'monospace', fontSize: '10px', color: '#ffe680', backgroundColor: '#14233a' }).setOrigin(0.5).setPadding(4, 2, 4, 2);
   const roof = scene.add.container(0, 0, [roofG, sign]).setDepth(20000);
 
-  return { layers: { ground, floor, wallsBack, furniture, wallsFront, wallsFrontCut, roof }, walkable, spots, doors };
+  // stairs (bottom-right of the workspace) connect storey 1 and 2 on the same tile
+  const stairs = { x: OFFICE.x + 12, y: OFFICE.y + OFFICE.h - 3 };
+  drawStairs(furniture, stairs, 'up');
+
+  const upper = buildUpperStorey(scene, stairs, spots);
+  return {
+    layers: { ground, floor, wallsBack, furniture, wallsFront, wallsFrontCut, roof },
+    walkable,
+    storeys: [{ level: 1, layers: [floor, wallsBack, furniture, wallsFront, wallsFrontCut], walkable }, upper],
+    stairs, spots, doors,
+  };
+}
+
+function drawStairs(g: Phaser.GameObjects.Graphics, at: { x: number; y: number }, dir: 'up' | 'down') {
+  const x = at.x * TILE, y = at.y * TILE;
+  g.fillStyle(0x1a1a24).fillRect(x - 2, y - 2, TILE + 4, TILE + 4);
+  for (let i = 0; i < 4; i++) {
+    const shade = dir === 'up' ? 0x9ab0c8 - i * 0x101010 : 0x5a6878 + i * 0x101010;
+    g.fillStyle(shade).fillRect(x, y + i * 4, TILE, 3);
+  }
+  g.fillStyle(0xffe680).fillTriangle(x + 8, y + (dir === 'up' ? 1 : 15), x + 4, y + 8, x + 12, y + 8);
+}
+
+/**
+ * Storey 2: the executive floor for Ultimate/Mega Digimon. Same footprint as the office,
+ * no outside doors; reached by the stairs.
+ */
+function buildUpperStorey(scene: Phaser.Scene, stairs: { x: number; y: number }, spots: Spot[]): Storey {
+  const px = (t: number) => t * TILE;
+  const walk = Array.from({ length: H }, () => Array<boolean>(W).fill(false));
+  for (let y = OFFICE.y + 1; y < OFFICE.y + OFFICE.h - 1; y++)
+    for (let x = OFFICE.x + 1; x < OFFICE.x + OFFICE.w - 1; x++) walk[y][x] = true;
+
+  const floor = scene.add.graphics().setDepth(1);
+  floor.fillStyle(0x2a1f3a).fillRect(px(OFFICE.x), px(OFFICE.y), px(OFFICE.w), px(OFFICE.h));
+  floor.fillStyle(0x6a2a4a).fillRect(px(OFFICE.x + 3), px(OFFICE.y + 2), px(OFFICE.w - 6), px(OFFICE.h - 4)); // carpet
+  floor.lineStyle(1, 0xffd84a, 0.25).strokeRect(px(OFFICE.x + 3) + 2, px(OFFICE.y + 2) + 2, px(OFFICE.w - 6) - 4, px(OFFICE.h - 4) - 4);
+
+  const WALL_TOP = 0xc8a8e8, WALL_FACE = 0x6a4a8a, CUT = 0x4a3468;
+  const wallsBack = scene.add.graphics().setDepth(2);
+  const wallsFront = scene.add.graphics();
+  const wallsFrontCut = scene.add.graphics();
+  for (let x = OFFICE.x; x < OFFICE.x + OFFICE.w; x++) {
+    wallsBack.fillStyle(WALL_FACE).fillRect(px(x), px(OFFICE.y) - 16, TILE, 32);
+    wallsBack.fillStyle(WALL_TOP).fillRect(px(x), px(OFFICE.y) - 16, TILE, 4);
+    // windows looking out over the Digital World
+    if (x % 3 === 0) wallsBack.fillStyle(0x6fd3ff, 0.8).fillRect(px(x) + 3, px(OFFICE.y) - 8, 10, 12);
+  }
+  const front: { x: number; y: number }[] = [];
+  for (let x = OFFICE.x; x < OFFICE.x + OFFICE.w; x++) front.push({ x, y: OFFICE.y + OFFICE.h - 1 });
+  for (let y = OFFICE.y + 1; y < OFFICE.y + OFFICE.h - 1; y++) front.push({ x: OFFICE.x, y }, { x: OFFICE.x + OFFICE.w - 1, y });
+  for (const t of front) {
+    wallsFront.fillStyle(WALL_FACE).fillRect(px(t.x), px(t.y) - 16, TILE, 32);
+    wallsFront.fillStyle(WALL_TOP).fillRect(px(t.x), px(t.y) - 16, TILE, 4);
+    wallsFrontCut.fillStyle(CUT).fillRect(px(t.x), px(t.y) + 8, TILE, 8);
+    wallsFrontCut.fillStyle(WALL_TOP).fillRect(px(t.x), px(t.y) + 8, TILE, 2);
+  }
+
+  const furniture = scene.add.graphics().setDepth(3);
+  let n = 0;
+  // big executive desks: 3 wide, wider gaps so Mega sprites (64px) fit
+  for (const row of [OFFICE.y + 4, OFFICE.y + 9]) {
+    for (const col of [OFFICE.x + 3, OFFICE.x + 9]) {
+      furniture.fillStyle(0x4a2a1a).fillRect(px(col), px(row) + 2, px(3), 14);
+      furniture.fillStyle(0xffd84a).fillRect(px(col), px(row) + 2, px(3), 2);
+      furniture.fillStyle(0x111822).fillRect(px(col) + 14, px(row) - 6, 20, 12);
+      furniture.fillStyle(0xff7ad8).fillRect(px(col) + 15, px(row) - 5, 18, 9);
+      for (let i = 0; i < 3; i++) walk[row][col + i] = false;
+      spots.push({ id: `exec-${++n}`, x: col + 1, y: row + 1, facing: 'up', zone: 'office', kind: 'desk', storey: 2 });
+    }
+  }
+  // lounge sofa
+  const sx = OFFICE.x + 15, sy = OFFICE.y + 3;
+  furniture.fillStyle(0x8a3a5a).fillRect(px(sx), px(sy), px(4), px(1)).fillRect(px(sx), px(sy), px(1), px(4));
+  for (let i = 0; i < 4; i++) { walk[sy][sx + i] = false; walk[sy + i][sx] = false; }
+  for (let i = 1; i < 4; i++)
+    spots.push({ id: `lounge-${i}`, x: sx + i, y: sy + 2, facing: 'up', zone: 'office', kind: 'meeting', storey: 2 });
+  drawStairs(furniture, stairs, 'down');
+  walk[stairs.y][stairs.x] = true;
+
+  const layers = [floor, wallsBack, furniture, wallsFront, wallsFrontCut];
+  for (const l of layers) l.setVisible(false);
+  return { level: 2, layers, walkable: walk };
 }
 
 /** 4-directional BFS on the walkable grid. Returns tile path excluding start. */

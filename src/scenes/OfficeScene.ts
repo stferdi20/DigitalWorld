@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { Agent } from '../agents/Agent';
 import { lineById } from '../data/roster';
-import type { Role } from '../data/types';
-import { H, OFFICE, TILE, W, buildWorld, inRect, type World } from '../world/map';
+import { STAGES, type Role, type Stage } from '../data/types';
+import { H, OFFICE, TILE, W, buildWorld, inRect, type Spot, type World } from '../world/map';
 import { preloadPacks, registerAnims } from '../world/sprites';
 import { MockSource } from '../sources/MockSource';
 import type { OfficeEvent } from '../sources/events';
@@ -19,6 +19,8 @@ export class OfficeScene extends Phaser.Scene {
   wallMode: WallMode = 'cut';
   darkEvolution = true;
   selected: Agent | null = null;
+  /** Storey currently shown (Sims-style floor selector). */
+  viewStorey = 1;
   /** UI hooks */
   onAgentsChanged: () => void = () => {};
   onSelect: (a: Agent | null) => void = () => {};
@@ -32,7 +34,7 @@ export class OfficeScene extends Phaser.Scene {
   create() {
     registerAnims(this);
     this.world = buildWorld(this);
-    this.source = new MockSource((e) => this.handle(e), () => [...this.agents.keys()]);
+    this.source = new MockSource((e) => this.handle(e), () => [...this.agents.keys()], (id) => !!this.agents.get(id)?.atDesk);
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, W * TILE, H * TILE).setRoundPixels(true);
@@ -54,19 +56,30 @@ export class OfficeScene extends Phaser.Scene {
     const kb = this.input.keyboard!;
     kb.on('keydown-R', () => this.cycleRoof());
     kb.on('keydown-W', () => this.cycleWalls());
+    kb.on('keydown-PAGE_UP', () => this.setStorey(this.viewStorey + 1));
+    kb.on('keydown-PAGE_DOWN', () => this.setStorey(this.viewStorey - 1));
 
     for (const [line, role] of [['veemon', 'coder'], ['lucemon', 'reviewer'], ['impmon', 'coder'],
       ['hagurumon', 'researcher'], ['blackagumon', 'planner'], ['candlemon', 'coder']] as [string, Role][]) {
       this.hire(line, undefined, role);
     }
+    this.hire('candlemon', 'piedmon', 'planner', 'lead-7'); // a Mega, to staff the executive floor
     this.applyWalls();
     this.onReady();
   }
 
   // ---- agent management (also used by the UI) ----
+  /** Seniors (Ultimate/Mega) prefer the executive floor; everyone else the main floor. */
+  private freeDesk(stage: Stage, except?: Agent): Spot | undefined {
+    const taken = new Set([...this.agents.values()].filter((a) => a !== except).map((a) => a.desk));
+    const free = this.world.spots.filter((s) => s.kind === 'desk' && !taken.has(s));
+    const senior = STAGES.indexOf(stage) >= STAGES.indexOf('ultimate');
+    const want = senior ? 2 : 1;
+    return free.find((s) => s.storey === want) ?? free[0];
+  }
+
   hire(lineId: string, formId: string | undefined, role: Role, name?: string) {
-    const free = this.world.spots.filter((s) => s.kind === 'desk' && ![...this.agents.values()].some((a) => a.desk === s));
-    if (!free.length) return null;
+    if (!this.world.spots.some((s) => s.kind === 'desk' && ![...this.agents.values()].some((a) => a.desk === s))) return null;
     const id = `agent-${++this.n}`;
     this.handle({ type: 'agent.spawn', agentId: id, lineId, formId, role, name });
     return this.agents.get(id) ?? null;
@@ -79,11 +92,20 @@ export class OfficeScene extends Phaser.Scene {
   handle(e: OfficeEvent) {
     if (e.type === 'agent.spawn') {
       const line = lineById(e.lineId);
-      const desk = this.world.spots.find((s) => s.kind === 'desk' && ![...this.agents.values()].some((a) => a.desk === s));
+      const form = line.forms.find((f) => f.id === e.formId) ?? line.forms.find((f) => f.stage === 'rookie') ?? line.forms[0];
+      const desk = this.freeDesk(form.stage);
       if (!desk) return;
       const a = new Agent(this, e.agentId, e.name ?? `${e.role}-${this.n}`, line, e.formId, e.role, desk,
-        this.world.walkable, () => this.speed, () => this.darkEvolution);
+        this.world, () => this.speed, () => this.darkEvolution);
       a.onChange = () => { if (this.selected === a) this.onSelect(a); this.onAgentsChanged(); };
+      a.onEvolved = () => {
+        // promotion/demotion between floors follows seniority
+        const better = this.freeDesk(a.form.stage, a);
+        if (better && better.storey !== a.desk.storey) {
+          a.moveDesk(better);
+          a.log.push(better.storey === 2 ? 'Promoted to the executive floor!' : 'Moved to the main floor');
+        }
+      };
       this.agents.set(e.agentId, a);
       this.onAgentsChanged();
       return;
@@ -107,11 +129,22 @@ export class OfficeScene extends Phaser.Scene {
   cycleRoof() { this.roofMode = ({ on: 'off', off: 'auto', auto: 'on' } as const)[this.roofMode]; this.onAgentsChanged(); }
   cycleWalls() { this.wallMode = ({ full: 'cut', cut: 'hidden', hidden: 'full' } as const)[this.wallMode]; this.applyWalls(); this.onAgentsChanged(); }
 
+  setStorey(n: number) {
+    this.viewStorey = Phaser.Math.Clamp(n, 1, this.world.storeys.length);
+    this.applyWalls();
+    this.onAgentsChanged();
+  }
+
+  /** Show only the viewed storey's interior, with the chosen wall mode. */
   applyWalls() {
-    const L = this.world.layers;
-    L.wallsFront.setVisible(this.wallMode === 'full').setDepth(9000);
-    L.wallsFrontCut.setVisible(this.wallMode === 'cut').setDepth(4);
-    L.wallsBack.setVisible(this.wallMode !== 'hidden');
+    for (const st of this.world.storeys) {
+      const on = st.level === this.viewStorey;
+      const [floor, wallsBack, furniture, wallsFront, wallsFrontCut] = st.layers;
+      floor.setVisible(on); furniture.setVisible(on);
+      wallsFront.setVisible(on && this.wallMode === 'full').setDepth(9000);
+      wallsFrontCut.setVisible(on && this.wallMode === 'cut').setDepth(4);
+      wallsBack.setVisible(on && this.wallMode !== 'hidden');
+    }
   }
 
   update(_t: number, dtMs: number) {
@@ -130,7 +163,10 @@ export class OfficeScene extends Phaser.Scene {
     roof.setVisible(roof.alpha > 0.02);
     for (const a of this.agents.values()) {
       const t = a.tile;
-      a.hidden = inRect(OFFICE, t.x, t.y) ? roof.alpha : 0;
+      const inside = inRect(OFFICE, t.x, t.y);
+      a.hidden = inside ? roof.alpha : 0;
+      // outdoors is storey 1; indoors only the viewed storey is drawn
+      a.shown = inside ? a.storey === this.viewStorey : true;
     }
   }
 }

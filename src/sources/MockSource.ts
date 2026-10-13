@@ -13,7 +13,7 @@ export class MockSource {
   private timer = 0;
   private n = 0;
 
-  constructor(private emit: Emit, private agents: () => string[]) {}
+  constructor(private emit: Emit, private agents: () => string[], private atDesk: (id: string) => boolean = () => true) {}
 
   update(dtMs: number) {
     this.timer -= dtMs * this.speed;
@@ -43,7 +43,8 @@ export class MockSource {
     this.busy.add(agentId);
     const taskId = `t${++this.n}`;
     this.emit({ type: 'task.assigned', agentId, taskId, title: title ?? TASKS[Math.floor(Math.random() * TASKS.length)] });
-    await this.wait(4000); // walking to desk
+    // walking to the desk (maybe via the stairs)
+    for (let t = 0; t < 60 && this.agents().includes(agentId) && !this.atDesk(agentId); t++) await this.wait(500);
     if (!this.agents().includes(agentId)) return void this.busy.delete(agentId);
     this.emit({ type: 'agent.state', agentId, state: 'thinking' });
     await this.wait(2000);
