@@ -17,6 +17,8 @@ export class OfficeScene extends Phaser.Scene {
   selected: Agent | null = null;
   /** Storey currently shown (Sims-style floor selector). */
   viewStorey = 1;
+  /** Agent the camera is following (cleared when you drag the map). */
+  following: Agent | null = null;
   /** UI hooks */
   onAgentsChanged: () => void = () => {};
   onSelect: (a: Agent | null) => void = () => {};
@@ -47,6 +49,7 @@ export class OfficeScene extends Phaser.Scene {
     });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
+      if (Math.abs(p.x - p.prevPosition.x) + Math.abs(p.y - p.prevPosition.y) > 0) { cam.stopFollow(); this.following = null; }   // dragging takes over
       cam.scrollX -= (p.x - p.prevPosition.x) / cam.zoom;
       cam.scrollY -= (p.y - p.prevPosition.y) / cam.zoom;
     });
@@ -86,7 +89,19 @@ export class OfficeScene extends Phaser.Scene {
 
   fire(id: string) { this.handle({ type: 'agent.remove', agentId: id }); }
 
-  select(a: Agent | null) { this.selected = a; if (a) audio.play('select'); this.onSelect(a); }
+  select(a: Agent | null) {
+    this.selected = a;
+    if (a) { audio.play('select'); this.focus(a); } else { this.cameras.main.stopFollow(); this.following = null; }
+    this.onSelect(a);
+  }
+
+  /** Bring the camera to an agent and keep it there: show their floor and follow them as they walk. */
+  focus(a: Agent) {
+    const st = this.world.areas.get(a.area)!.storey;
+    if (st !== undefined && st !== this.viewStorey) this.setStorey(st);
+    this.cameras.main.startFollow(a.sprite, true, 0.12, 0.12);
+    this.following = a;
+  }
 
   /** Effects only for what's on screen, so a big office stays listenable. */
   private sfx(a: Agent, ev: SfxEvent) {
@@ -163,6 +178,12 @@ export class OfficeScene extends Phaser.Scene {
     this.source.update(dtMs);
     for (const a of this.agents.values()) a.update(dt);
 
+    // a followed agent who takes the stairs pulls the floor view along
+    const sel = this.selected;
+    if (sel && this.following === sel) {
+      const st = this.world.areas.get(sel.area)!.storey;
+      if (st !== undefined && st !== this.viewStorey) this.setStorey(st);
+    }
     const focus = this.focusArea();
     if (focus) audio.setArea(focus);
     for (const a of this.agents.values()) {

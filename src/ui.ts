@@ -104,7 +104,7 @@ export function mountUI(scene: OfficeScene) {
       ${esc(a.name)} · ${esc(a.form.name)} <small>${a.area}</small> <span class="st ${a.state}">${a.state}</span></div>`).join('');
     $('#list').querySelectorAll<HTMLElement>('.row').forEach((r) => (r.onclick = () => {
       const a = scene.agents.get(r.dataset.id!); if (!a) return;
-      scene.select(a); scene.cameras.main.pan(a.sprite.x, a.sprite.y, 400);
+      scene.select(a);
     }));
     $('#doing').innerHTML = agents.filter((a) => a.task).map((a) =>
       `<div>${esc(a.task!)} — <i>${esc(a.form.name)}</i> ${Math.round(a.progress * 100)}%</div>`).join('');
