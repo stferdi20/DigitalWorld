@@ -6,7 +6,10 @@ An interactive pixel-art virtual office. Each AI "agent" is shown as a Digimon w
 
 | Topic | Decision |
 |---|---|
-| Art style | Pixel art from existing resources; no custom art |
+| Art style | NDS-era pixel art from existing resources (Digimon World DS / Dawn & Dusk), no custom art |
+| Sprite size | DS overworld sprites on a **universal grid**: 16px tiles, sprites in 32×32 or 64×64 frames anchored at the feet, so Mega Man or Pokémon DS-style sprites can be added later |
+| World | One Digital World office plus surrounding Digi-Farms, NDS style |
+| Hosting | Local only (`npm run dev`) |
 | Scope | Interactive prototype covering everything: animations, bubbles, panels, walking |
 | Stack | Phaser 3 + Vite + TypeScript, maps built in Tiled |
 | Roles | Evolution stage = seniority; Digimon can be picked and assigned freely |
@@ -18,35 +21,51 @@ An interactive pixel-art virtual office. Each AI "agent" is shown as a Digimon w
 Every candidate below needs its license checked before we commit to it. Digimon is Bandai IP, so this is a **personal or fan project and not for commercial use**.
 
 **Digimon sprites (animated)**
-- **V-Pet / Pendulum / Digivice sprite rips.** These are 16×16 or 32×32 sheets with idle, walk, happy, angry, eat and attack frames, and they cover almost every Digimon including the evolution lines. Main candidates: community "Digimon V-Pet sprite" archives (Humulos' collections) and The Spriters Resource (Digimon Pendulum, Digimon World DS, Digimon Story).
-- Fallback: **Digimon World DS / Dawn & Dusk overworld sprites** (The Spriters Resource). They're larger, with 4-direction walk cycles.
+- **Main source: Digimon World DS / Dawn & Dusk / Digimon Story overworld and farm sprites** (The Spriters Resource). They have 4-direction walk cycles and idle frames.
+- If a favorite Digimon is missing from the DS games, fill the gap with sprites from other DS/GBA-era Digimon games, normalized to the same manifest.
 - Static portraits for the UI panel: digi-api.com (`/api/v1/digimon/{name}`) returns images, levels and evolution data. We can also use that API to seed the roster.
 
-**Office environment**
-- **LimeZu "Modern Interiors" / "Modern Office"** (itch.io; a free tier exists, and the full pack is cheap). It has desks, PCs, chairs, plants, a kitchen and meeting rooms, in 16×16 or 32×32 to match the V-Pet scale.
-- Alternatives: Kenney "Roguelike Indoor" (CC0), or Ninja Adventure (CC0) for extra props.
-- To match the Digimon theme, retint floors and walls toward a "Digital World" palette (grid floor, cyan glow) with a Phaser post-FX pipeline, so we don't need new art.
+**Environment (NDS Digital World, not LimeZu)**
+- Tilesets from **Digimon World DS** and **Digimon World Dawn & Dusk** (The Spriters Resource, plus map rips). The Digimon Center / tamer HQ interiors become the office. The **Digi-Farm** maps (fields, fences, farm terrain types) become the surrounding farms.
+- Optional extras: Digimon Story: Lost Evolution and Digimon World DS town/building tiles.
+- Rips get re-sliced to a **16px tile grid** and exported as Tiled tilesets.
 
 **UI / FX**
 - Kenney UI Pack and Emote Pack (CC0) for speech and task bubbles and the `!`, `?`, `…` and `💤` emotes.
 - Kenney Particle Pack (CC0) for the evolution flash.
 - Pixel font: "Press Start 2P" or "m5x7".
 
-## 3. Office layout (Tiled map)
+## 3. World layout (one Tiled map, NDS style)
 
 ```
-┌──────────────────────────────────────────────┐
-│  SERVER ROOM      │   OPEN WORKSPACE (desks) │
-│  (machine types   │   ▢▢  ▢▢  ▢▢  ▢▢          │
-│   idle here)      │   ▢▢  ▢▢  ▢▢  ▢▢          │
-├────────┬──────────┼──────────────────────────┤
-│ DARK   │ MEETING  │  BREAK ROOM / DIGI-EGG   │
-│ AREA   │ ROOM     │  NURSERY (unassigned     │
-│(review)│(planning)│  agents & new spawns)    │
-└────────┴──────────┴──────────────────────────┘
+        ┌──────── DIGI-FARM (Server Farm) ────────┐
+        │ machine-type terrain, idle machine Digis │
+        └────────────────┬────────────────────────┘
+ ┌ DIGI-FARM ┐   ┌───────┴─── DIGITAL WORLD OFFICE ───────┐   ┌ DIGI-FARM ┐
+ │ (Dark)    │───│ open workspace │ meeting │ review desk │───│ (Nursery) │
+ │ dark/skull│   │  desks ▢▢▢▢    │  room   │             │   │ eggs, new │
+ │ idle zone │   └───────────────────┬─────────────────────┘   │ / unassigned│
+ └───────────┘                       │                         └────────────┘
+                     ┌──── DIGI-FARM (Training) ────┐
+                     │ agents gain XP / evolve here │
+                     └──────────────────────────────┘
 ```
-- Tiled layers: `floor`, `walls`, `furniture`, `furniture_top` (drawn above sprites), `collision`, and an object layer `spots` with desk seats, the coffee machine, meeting chairs and nursery beds.
-- Each desk spot has `{id, facing, room}` so an agent can be assigned to a seat.
+- The office is where agents work; the farms are where they idle, rest, train and hatch. Idle agents walk out to the farm that matches their type (dark, machine, or nursery).
+- Tiled layers: `floor`, `walls`, `furniture`, `furniture_top` (drawn above sprites), `collision`, and an object layer `spots` with desk seats, farm spots, the evolution pad and nursery spots.
+- Each spot has `{id, facing, zone}`.
+- The camera follows the selected agent or shows the whole world. The office interior can be a separate scene you enter through the door, NDS-style.
+
+## 3b. Universal sprite format (for future Mega Man / Pokémon packs)
+
+Each sprite pack ships with a manifest, so the engine doesn't care which game a sprite came from:
+```json
+{ "id": "veemon", "pack": "digimon-ds", "sheet": "veemon.png",
+  "frame": [32, 32], "anchor": [0.5, 1.0], "scale": 1,
+  "anims": { "idle_down": [0,1], "walk_down": [2,3,4,5], "walk_left": [...],
+             "work": [...], "happy": [...], "hurt": [...] } }
+```
+- Rules: 16px world tiles, feet-anchored sprites, 4-direction walk, and a standard set of animation names. A missing animation falls back to `idle`.
+- Adding Mega Man or Pokémon later means dropping in a pack folder and a manifest.
 
 ## 4. Roster and evolution = seniority
 
@@ -77,19 +96,20 @@ Starter lines (all data-driven in `roster.json`):
 
 | Agent state | Behavior | Animation | Bubble |
 |---|---|---|---|
-| `idle` | Wander or break room | idle bob | 💤 after 30s |
+| `idle` | Wander the farms | idle, wander the farm | 💤 after 30s |
 | `assigned` | Pathfind to desk | walk | 📋 task title |
-| `working` | At desk | work loop (V-Pet "eat/attack" frames reused) + typing particles | progress bar |
+| `working` | At desk | work loop (DS battle/attack frames reused) + typing particles | progress bar |
 | `thinking` | At desk | slow idle + `…` | "…" |
 | `waiting_input` | Stands, faces camera | happy/jump | ❓ (click to answer) |
 | `blocked/error` | At desk | angry/hurt frames | ❗ red |
-| `done` | Celebrate, walk to break room | happy | ✅ + XP popup |
+| `done` | Celebrate, walk to a farm | happy | ✅ + XP popup |
 | `evolving` | Center stage | white flash + sprite swap (particle FX) | "X digivolved to Y!" |
 
 Pathfinding: EasyStar.js on the Tiled collision grid.
 
 ## 6. UI mockup
 
+- **Main view:** NDS-style world with the office and farms; zoom 2–3× for crisp pixels.
 - **Top bar:** office name, agent count, tasks done today, speed control (simulate 1×/4×).
 - **Left sidebar:** roster/Digidex (search, filter by stage or type: Vaccine/Data/Virus, dark, machine), drag to hire.
 - **Click an agent:** right panel with portrait, name, stage, XP bar, role, current task, log tail, and buttons to *Assign task*, *Evolve*, *Change Digimon*, *Send to break*.
@@ -120,8 +140,8 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 
 ## 9. Milestones
 
-1. **M0 Assets:** collect and verify licenses; slice sprite sheets; write `roster.json` for about 8 lines.
-2. **M1 Office:** Vite + Phaser scaffold, Tiled map renders, camera pan/zoom.
+1. **M0 Assets:** collect DS Digimon sprites and DS Digital World / Digi-Farm tiles; write the manifest format and slicer script; `roster.json` for about 8 lines.
+2. **M1 World:** Vite + Phaser scaffold, office and farm Tiled map, camera pan/zoom.
 3. **M2 Agents:** spawn Digimon, idle/walk, pathfind to desks.
 4. **M3 States and bubbles:** full state machine, emotes, progress bars.
 5. **M4 UI:** roster drag-to-hire, agent panel, task board, mock source.
@@ -131,7 +151,5 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 
 ## 10. Open questions
 
-- Sprite scale: tiny 16×16 V-Pet look (very retro, every Digimon available), or larger DS sprites (nicer walk cycles, fewer Digimon)?
-- Are you OK buying the full LimeZu pack (around $10), or should we stick to free/CC0 only?
-- Should the office be a single room or multiple floors (e.g. one floor per evolution stage)?
-- Should the hosting target be local only, or a deployed page you can share?
+- Interior: should the office be a separate scene you enter through a door, or one continuous map with the roof cut away?
+- Which DS game's look should lead (World DS, Dawn & Dusk, or Story: Lost Evolution)?
