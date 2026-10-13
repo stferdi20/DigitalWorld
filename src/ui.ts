@@ -3,6 +3,8 @@ import { LINES, addCustomLine, allForms, lineById } from './data/roster';
 import { allSprites, currentMapping, setSpriteFor, spriteFor, type SpriteInfo } from './world/sprites';
 import { ROLES, SENIORITY, type Role } from './data/types';
 import type { OfficeScene } from './scenes/OfficeScene';
+import { audio, SFX_EVENTS } from './world/audio';
+import { AREAS } from './world/map';
 
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as T;
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -15,6 +17,7 @@ export function mountUI(scene: OfficeScene) {
     <span><button id="st-dn" title="PgDn">▼</button> <b id="storey"></b> <button id="st-up" title="PgUp">▲</button></span>
     <button id="speed"></button>
     <label><input type="checkbox" id="dark" checked> dark digivolution</label>
+    <button id="snd-btn">♪ Sound</button>
   </div>
   <div id="left" class="panel">
     <h3>HIRE</h3>
@@ -29,6 +32,7 @@ export function mountUI(scene: OfficeScene) {
   </div>
   <div id="right" class="panel" hidden></div>
   <div id="board" class="panel"><div><h4>DOING</h4><div id="doing"></div></div><div><h4>DONE</h4><div id="done"></div></div></div>
+  <div id="snd" class="panel" hidden></div>
   <div id="dex" class="panel" hidden>
     <div class="dex-head"><b id="dex-title">DIGIDEX</b>
       <span id="dex-tabs"></span>
@@ -40,6 +44,9 @@ export function mountUI(scene: OfficeScene) {
   </div>
   <style>
     [hidden] { display: none !important; }
+    #snd { top: 52px; right: 8px; width: 300px; max-height: calc(100vh - 190px); overflow: auto; z-index: 11; }
+    #snd .r { display: flex; gap: 4px; align-items: center; justify-content: space-between; }
+    #snd select { max-width: 150px; }
     #dex { inset: 60px 220px 120px 220px; display: flex; flex-direction: column; z-index: 10; }
     .dex-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     #dex-grid { flex: 1; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 4px; margin-top: 6px; }
@@ -206,6 +213,45 @@ export function mountUI(scene: OfficeScene) {
       $<HTMLInputElement>('#h-name').value || undefined);
     if (!a) alert('No free desks!'); else scene.select(a);
   });
+
+  // ---- sound settings: on/off, volumes, song per area, effect per event (with preview) ----
+  function drawSound() {
+    const s = audio.settings;
+    if (!audio.available) {
+      $('#snd').innerHTML = `<h3>SOUND</h3><p>No sound pack yet. Run<br><code>python3 tools/rom-extract/dusk_sound.py &lt;rom.nds&gt;</code></p>`;
+      return;
+    }
+    const opt = (list: { id: string; seconds: number }[], cur: string | undefined) =>
+      `<option value="">(none)</option>` + list.map((x) => `<option value="${x.id}" ${x.id === cur ? 'selected' : ''}>${x.id} · ${x.seconds}s</option>`).join('');
+    const areas = AREAS.map((a) => `<div class="r">${esc(a.label.split(' (')[0].toLowerCase())}
+        <span><select data-bgm="${a.id}">${opt(audio.index.bgm, audio.bgmFor(a.id))}</select><button data-pb="${a.id}">▶</button></span></div>`).join('');
+    const evs = SFX_EVENTS.map((e) => `<div class="r">${e}
+        <span><select data-ev="${e}">${opt(audio.index.se, audio.sfxFor(e))}</select><button data-pe="${e}">▶</button></span></div>`).join('');
+    $('#snd').innerHTML = `<h3>SOUND</h3>
+      <div class="r"><label><input type="checkbox" id="snd-on" ${s.on ? 'checked' : ''}> sound on</label><button id="snd-x">✕</button></div>
+      <div class="r">music <input type="range" id="snd-m" min="0" max="1" step="0.05" value="${s.music}"></div>
+      <div class="r">effects <input type="range" id="snd-s" min="0" max="1" step="0.05" value="${s.sfx}"></div>
+      <h4>MUSIC PER AREA</h4>${areas}<h4>EFFECTS</h4>${evs}
+      <button id="snd-reset">Reset to defaults</button>`;
+    $<HTMLInputElement>('#snd-on').onchange = (e) => { s.on = (e.target as HTMLInputElement).checked; audio.save(); };
+    $<HTMLInputElement>('#snd-m').oninput = (e) => { s.music = +(e.target as HTMLInputElement).value; audio.save(); };
+    $<HTMLInputElement>('#snd-s').oninput = (e) => { s.sfx = +(e.target as HTMLInputElement).value; audio.save(); };
+    $('#snd-x').onclick = () => { $('#snd').hidden = true; };
+    $('#snd-reset').onclick = () => { s.bgm = {}; s.events = {}; audio.save(); drawSound(); };
+    $('#snd').querySelectorAll<HTMLSelectElement>('select[data-bgm]').forEach((el) => (el.onchange = () => {
+      s.bgm[el.dataset.bgm as keyof typeof s.bgm] = el.value; audio.save();
+    }));
+    $('#snd').querySelectorAll<HTMLSelectElement>('select[data-ev]').forEach((el) => (el.onchange = () => {
+      s.events[el.dataset.ev as keyof typeof s.events] = el.value; audio.save(); audio.preview(el.value);
+    }));
+    $('#snd').querySelectorAll<HTMLElement>('button[data-pb]').forEach((b) => (b.onclick = () => {
+      const v = ($(`select[data-bgm="${b.dataset.pb}"]`) as HTMLSelectElement).value; audio.preview(v, true);
+    }));
+    $('#snd').querySelectorAll<HTMLElement>('button[data-pe]').forEach((b) => (b.onclick = () => {
+      audio.preview(($(`select[data-ev="${b.dataset.pe}"]`) as HTMLSelectElement).value);
+    }));
+  }
+  $('#snd-btn').onclick = () => { const el = $('#snd'); el.hidden = !el.hidden; if (!el.hidden) drawSound(); };
 
   scene.onAgentsChanged = refresh;
   scene.onSelect = (a) => {

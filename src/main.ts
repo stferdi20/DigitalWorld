@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { OfficeScene } from './scenes/OfficeScene';
 import { mountUI } from './ui';
+import { audio } from './world/audio';
+
+audio.init();
 
 const scene = new OfficeScene();
 scene.onReady = () => mountUI(scene);

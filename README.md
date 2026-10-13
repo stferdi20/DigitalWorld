@@ -65,6 +65,19 @@ python3 tools/rom-extract/place_walk.py out_bn5/places/st8200.png bn5_net net
 
 To swap in another place, run the same command on another image and point `AREAS` in `src/world/map.ts` at its id. For example, use Wigglytuff's Guild (`004_T00P04A`), or ACDC (`st0400`) with mode `town`.
 
+## Sound (Digimon World Dusk)
+
+Music and effects are rendered from the game's own sequences, instrument banks and samples, straight from your ROM:
+
+```bash
+pip install ndspy numpy        # plus ffmpeg on PATH
+python3 tools/rom-extract/dusk_sound.py "Digimon World - Dusk (USA).nds"   # → packs/sound/dusk (46 songs, 183 effects, ~40 MB, gitignored)
+```
+
+In the game, the area under the camera picks the song. Effects play for hires, assigned / finished / failed tasks, digivolutions, warps and selection, but only for characters on screen, and repeats are rate-limited. The **♪ Sound** panel has on/off, music and effects volume, and a per-area song and per-event effect picker with ▶ preview. Picks are saved in your browser. Audio starts after your first click, which is a browser rule.
+
+The renderer is a compact DS sequencer, so it's close to the game but not exact: vibrato, portamento and pitch sweeps aren't emulated. PMD's sound (SMD/SWD, a different engine) isn't converted yet.
+
 ## Other sprite packs (Mega Man, Pokémon…)
 
 1. Put a sheet in `assets-raw/`, then run `npm run slice -- assets-raw/foo.png --id foo --pack megaman`.

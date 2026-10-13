@@ -31,6 +31,9 @@ export class Agent {
   private bubbleIdle = 0;
   onChange?: () => void;
   onEvolved?: () => void;
+  /** Sound/FX hooks (set by the scene). */
+  onWarp?: () => void;
+  onEvolveStart?: () => void;
   /** False while the agent is in an office storey the camera isn't showing. */
   shown = true;
 
@@ -112,6 +115,7 @@ export class Agent {
     const p = this.pending;
     if (!p || this.warping) return;
     this.warping = true;
+    this.onWarp?.();
     const s = this.sprite;
     const sx = s.scaleX, sy = s.scaleY;
     this.scene.tweens.add({
@@ -195,6 +199,7 @@ export class Agent {
     const prev = this.form;
     this.path = []; this.pending = null;
     this.setState('evolving');
+    this.onEvolveStart?.();
     const s = this.sprite;
     this.scene.tweens.add({
       targets: s, scaleX: 0.2, scaleY: 1.6, alpha: 0.6, duration: 120, yoyo: true, repeat: 4,

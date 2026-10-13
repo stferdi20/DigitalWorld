@@ -5,6 +5,7 @@ import { STAGES, type Role, type Stage } from '../data/types';
 import { WORLD_H, WORLD_W, buildWorld, preloadMaps, type Spot, type World } from '../world/map';
 import { preloadPacks, registerAnims } from '../world/sprites';
 import { MockSource } from '../sources/MockSource';
+import { audio, type SfxEvent } from '../world/audio';
 import type { OfficeEvent } from '../sources/events';
 
 export class OfficeScene extends Phaser.Scene {
@@ -81,7 +82,22 @@ export class OfficeScene extends Phaser.Scene {
 
   fire(id: string) { this.handle({ type: 'agent.remove', agentId: id }); }
 
-  select(a: Agent | null) { this.selected = a; this.onSelect(a); }
+  select(a: Agent | null) { this.selected = a; if (a) audio.play('select'); this.onSelect(a); }
+
+  /** Effects only for what's on screen, so a big office stays listenable. */
+  private sfx(a: Agent, ev: SfxEvent) {
+    if (a.shown && this.cameras.main.worldView.contains(a.sprite.x, a.sprite.y)) audio.play(ev);
+  }
+
+  /** The area under the camera's centre (respecting the viewed storey) picks the music. */
+  private focusArea() {
+    const c = this.cameras.main.midPoint;
+    for (const a of this.world.areas.values()) {
+      if (a.storey !== undefined && a.storey !== this.viewStorey) continue;
+      if (c.x >= a.x && c.x < a.x + a.w && c.y >= a.y && c.y < a.y + a.h) return a.id;
+    }
+    return null;
+  }
 
   handle(e: OfficeEvent) {
     if (e.type === 'agent.spawn') {
@@ -100,7 +116,10 @@ export class OfficeScene extends Phaser.Scene {
           a.log.push(better.area === 'exec' ? 'Promoted to the executive floor!' : 'Moved to the main floor');
         }
       };
+      a.onWarp = () => this.sfx(a, 'warp');
+      a.onEvolveStart = () => this.sfx(a, 'evolve');
       this.agents.set(e.agentId, a);
+      this.sfx(a, 'hire');
       this.onAgentsChanged();
       return;
     }
@@ -112,10 +131,10 @@ export class OfficeScene extends Phaser.Scene {
         if (this.selected === a) this.select(null);
         this.onAgentsChanged();
         break;
-      case 'task.assigned': a.assign(e.title); break;
+      case 'task.assigned': a.assign(e.title); this.sfx(a, 'assign'); break;
       case 'task.progress': a.progress = e.progress; if (this.selected === a) this.onSelect(a); break;
       case 'agent.state': a.setState(e.state); break;
-      case 'task.done': a.finish(e.ok); break;
+      case 'task.done': this.sfx(a, e.ok ? 'done' : 'fail'); a.finish(e.ok); break;
     }
   }
 
@@ -140,6 +159,8 @@ export class OfficeScene extends Phaser.Scene {
     this.source.update(dtMs);
     for (const a of this.agents.values()) a.update(dt);
 
+    const focus = this.focusArea();
+    if (focus) audio.setArea(focus);
     for (const a of this.agents.values()) {
       const st = this.world.areas.get(a.area)!.storey;
       a.shown = st === undefined || st === this.viewStorey;
