@@ -209,6 +209,6 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 
    Each would join the world as another area, connected by warps, the same way the Digi-Farms are.
 
-**Status:** steps 1, 2, 4 and 5 are done (tools merged; `import_pmd.py` / `import_bn5.py`; Digidex tabs + name search; Pokémon lines + MegaMan.EXE in the roster). Step 6 done too: Treasure Town and a BN5 net area are home areas for Pokémon and Mega Man, with colour-derived walk grids. Still to do: 8-direction anims (step 3).
+**Status:** steps 1, 2, 4 and 5 are done (tools merged; `import_pmd.py` / `import_bn5.py`; Digidex tabs + name search; Pokémon lines + MegaMan.EXE in the roster). Step 6 done too: Treasure Town and a BN5 net area are home areas for Pokémon and Mega Man, with colour-derived walk grids. Step 3 done too: 8-direction walking (PMD's 8 rows and BN5's native diagonals; Dusk falls back to its side/back poses), and sprite sheets now load on demand (startup ~12s → ~4.5s).
 
 **Originally needed to start:** the extracted Pokémon and Mega Man outputs (zipped, each under 30 MB), or the two ROMs to extract here.

@@ -3,7 +3,7 @@ import { Agent } from '../agents/Agent';
 import { lineById } from '../data/roster';
 import { STAGES, type Role, type Stage } from '../data/types';
 import { WORLD_H, WORLD_W, buildWorld, preloadMaps, type Spot, type World } from '../world/map';
-import { preloadPacks, registerAnims } from '../world/sprites';
+import { onSpriteLoaded, preloadPacks, registerAnims, spriteIdFor } from '../world/sprites';
 import { MockSource } from '../sources/MockSource';
 import { audio, type SfxEvent } from '../world/audio';
 import type { OfficeEvent } from '../sources/events';
@@ -30,6 +30,10 @@ export class OfficeScene extends Phaser.Scene {
   create() {
     registerAnims(this);
     this.world = buildWorld(this);
+    // sheets stream in on demand: swap placeholders for the real sprite as soon as it lands
+    onSpriteLoaded((id) => {
+      for (const a of this.agents.values()) if (spriteIdFor(a.form.id) === id) a.applyForm();
+    });
     this.source = new MockSource((e) => this.handle(e), () => [...this.agents.keys()], (id) => !!this.agents.get(id)?.atDesk);
 
     const cam = this.cameras.main;

@@ -13,8 +13,10 @@ import glob, os, sys
 from PIL import Image
 from packs import Atlas, ROOT, write_pack
 
-# our direction -> BN anim index (idle; walk is +8). Up uses up-left, down uses down-left.
-DIRS = {'down': 4, 'left': 4, 'right': 2, 'up': 6}
+# our direction -> BN anim index (idle; walk is +8). BN is isometric: the four diagonals are native,
+# straight directions reuse the nearest diagonal.
+DIRS = {'down_left': 4, 'down_right': 2, 'up_left': 6, 'up_right': 0,
+        'down': 4, 'left': 4, 'right': 2, 'up': 6}
 
 
 def frames_of(strip, fw):

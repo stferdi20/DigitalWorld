@@ -3,6 +3,15 @@ import { STAGES, type AnimName, type DigimonForm, type EvolutionLine, type Facin
 import { animFor, spriteFor } from '../world/sprites';
 import { areaForZone, cellCenter, findPath, randomWalkable, type Area, type AreaId, type Cell, type Spot, type World } from '../world/map';
 
+/** 8-way facing from a movement vector (45° sectors). Isometric 2:1 moves read as diagonals. */
+function facingOf(dx: number, dy: number): Facing {
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  const h = dx > 0 ? 'right' : 'left', v = dy > 0 ? 'down' : 'up';
+  if (ay < ax * 0.414) return h;
+  if (ay > ax * 2.414) return v;
+  return `${v}_${h}` as Facing;
+}
+
 export type AgentState = 'idle' | 'assigned' | 'thinking' | 'working' | 'waiting_input' | 'blocked' | 'done' | 'evolving';
 
 const BUBBLE: Record<AgentState, string> = {
@@ -236,7 +245,7 @@ export class Agent {
       const tx = n.x, ty = n.y;
       const dx = tx - this.sprite.x, dy = ty - this.sprite.y;
       const dist = Math.hypot(dx, dy), step = speed * dt;
-      this.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
+      this.facing = facingOf(dx, dy);
       if (dist <= step) { this.sprite.setPosition(tx, ty); this.path.shift(); }
       else this.sprite.setPosition(this.sprite.x + (dx / dist) * step, this.sprite.y + (dy / dist) * step);
       this.play(`walk_${this.facing}`);

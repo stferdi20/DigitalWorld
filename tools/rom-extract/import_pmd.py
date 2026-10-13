@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 from packs import Atlas, ROOT, write_pack
 
-DIRS = {'down': 0, 'right': 2, 'up': 4, 'left': 6}
+DIRS = {'down': 0, 'down_right': 1, 'right': 2, 'up_right': 3, 'up': 4, 'up_left': 5, 'left': 6, 'down_left': 7}
 # our anim -> PMD anims to try, and which direction row
 WANT = {'work': (['Shoot', 'Charge', 'Attack'], 0), 'happy': (['Pose', 'Hop', 'Double'], 0), 'hurt': (['Hurt'], 0)}
 MAX_CELL = 64

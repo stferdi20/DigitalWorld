@@ -50,7 +50,9 @@ for (const id of fs.readdirSync(src).sort()) {
           work: [6, 7], happy: [8, 6], hurt: [7] }
       : { idle_down: [3], walk_down: [4, 3, 5, 3], idle_up: [0], walk_up: [1, 0, 2, 0], ...side,
           work: [3, 4], happy: [3, 5], hurt: [3] },
-    mirror: { idle_right: 'idle_left', walk_right: 'walk_left' },
+    // side pose faces down-left and back pose up-left; the other diagonals are those mirrored
+    mirror: { idle_right: 'idle_left', walk_right: 'walk_left', idle_down_right: 'idle_left', walk_down_right: 'walk_left',
+      idle_up_right: 'idle_up', walk_up_right: 'walk_up' },
     thumb: nine ? 6 : 3,
   });
 }
