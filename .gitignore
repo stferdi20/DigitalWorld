@@ -1,7 +1,13 @@
 node_modules
 dist
-# Ripped game art is copyrighted: keep it local only.
+# Ripped game assets are copyrighted (Bandai Namco, Nintendo/Chunsoft, Capcom).
+# Keep ROMs and extraction output local; never commit them to this repo.
+*.nds
+*.3ds
+*.7z
 .dusk/
+assets/ripped/
+out*/
 assets-raw/*
 !assets-raw/.gitkeep
 public/assets/packs/*

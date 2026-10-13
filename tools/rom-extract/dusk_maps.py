@@ -3,7 +3,7 @@
 Export Digimon World Dusk field maps straight from your own ROM into a local, gitignored pack.
 
     pip install ndspy pillow
-    python3 tools/dusk/export_maps.py "Digimon World - Dusk (USA).nds" [map ids...]
+    python3 tools/rom-extract/dusk_maps.py "Digimon World - Dusk (USA).nds" [map ids...]
 
 Writes public/assets/packs/dusk-maps/<id>.png (layer a under layer b) and <id>.json with an
 8px walk grid ('1' = walkable) decoded from the map's .0t floor mask. With no ids, exports

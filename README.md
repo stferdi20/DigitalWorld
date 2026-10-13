@@ -25,8 +25,8 @@ The world is made of real Dusk maps exported from **your own ROM**:
 
 ```bash
 pip install ndspy pillow
-python3 tools/dusk/export_maps.py "Digimon World - Dusk (USA).nds"         # → public/assets/packs/dusk-maps (gitignored)
-python3 tools/dusk/export_maps.py "Digimon World - Dusk (USA).nds" 12 152  # export other maps too
+python3 tools/rom-extract/dusk_maps.py "Digimon World - Dusk (USA).nds"         # → public/assets/packs/dusk-maps (gitignored)
+python3 tools/rom-extract/dusk_maps.py "Digimon World - Dusk (USA).nds" 12 152  # export other maps too
 ```
 
 Each map gets an 8px walk grid decoded from the game's floor mask (`.0t`). Digimon walk on real floor and warp between maps. To change which map is used where, edit `AREAS` in `src/world/map.ts`.
