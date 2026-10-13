@@ -12,3 +12,4 @@ assets-raw/*
 !assets-raw/.gitkeep
 public/assets/packs/*
 !public/assets/packs/README.md
+__pycache__/

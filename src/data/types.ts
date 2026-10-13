@@ -10,6 +10,8 @@ export type Facing = 'down' | 'left' | 'right' | 'up';
 /** One entry of a pack's manifest.json — game-agnostic sprite description. */
 export interface SpriteManifest {
   id: string;
+  /** Display name, e.g. "Charizard" (Digimon sets are only numbered). */
+  name?: string;
   sheet: string;              // path relative to the pack folder
   frame: [number, number];    // frame width/height in px (multiple of 16 recommended)
   anchor?: [number, number];  // default [0.5, 1] = feet

@@ -1,10 +1,25 @@
 {
-  "_note": "Default form -> Dusk overworld set. Only sets identified with confidence; pick the rest in-app (Digidex button) and export.",
+  "_note": "Default form -> sprite id (any pack: dusk_*, pmd_*, bn5_*). Pick the rest in-app (Digidex) and export.",
   "agumon": "dusk_0147",
   "veemon": "dusk_0148",
   "impmon": "dusk_0171",
   "hagurumon": "dusk_0163",
   "candlemon": "dusk_0202",
   "exveemon": "dusk_0320",
-  "piedmon": "dusk_0426"
+  "piedmon": "dusk_0426",
+  "charmander": "pmd_charmander",
+  "charmeleon": "pmd_charmeleon",
+  "charizard": "pmd_charizard",
+  "gastly": "pmd_gastly",
+  "haunter": "pmd_haunter",
+  "gengar": "pmd_gengar",
+  "magnemite": "pmd_magnemite",
+  "magneton": "pmd_magneton",
+  "pichu": "pmd_pichu",
+  "pikachu": "pmd_pikachu",
+  "raichu": "pmd_raichu",
+  "megaman_exe": "bn5_man80",
+  "machop": "pmd_machop",
+  "machoke": "pmd_machoke",
+  "machamp": "pmd_machamp"
 }

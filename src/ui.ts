@@ -17,7 +17,7 @@ export function mountUI(scene: OfficeScene) {
     <label><input type="checkbox" id="dark" checked> dark digivolution</label>
   </div>
   <div id="left" class="panel">
-    <h3>HIRE A DIGIMON</h3>
+    <h3>HIRE</h3>
     <select id="h-line">${LINES.map((l) => `<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select>
     <select id="h-form"></select>
     <select id="h-role">${ROLES.map((r) => `<option>${r}</option>`).join('')}</select>
@@ -31,7 +31,8 @@ export function mountUI(scene: OfficeScene) {
   <div id="board" class="panel"><div><h4>DOING</h4><div id="doing"></div></div><div><h4>DONE</h4><div id="done"></div></div></div>
   <div id="dex" class="panel" hidden>
     <div class="dex-head"><b id="dex-title">DIGIDEX</b>
-      <input id="dex-q" placeholder="filter: #0147, 64, …" size="16">
+      <span id="dex-tabs"></span>
+      <input id="dex-q" placeholder="search name or #number" size="18">
       <button id="dex-export" title="Download your picks as dusk-map.json">Export picks</button>
       <button id="dex-reset">Use default</button>
       <button id="dex-close">✕</button></div>
@@ -45,7 +46,8 @@ export function mountUI(scene: OfficeScene) {
     .dx { background: #1f5f4a; border: 1px solid transparent; border-radius: 3px; cursor: pointer; text-align: center; padding: 2px; }
     .dx:hover { border-color: #ffe680; } .dx.cur { border-color: #7dff9a; background: #2f7f5a; }
     .dx i { display: block; margin: 0 auto; image-rendering: pixelated; background-repeat: no-repeat; }
-    .dx span { font-size: 9px; color: #ffe680; }
+    .dx span { font-size: 9px; color: #ffe680; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #dex-tabs button.on { background: #35e0ff; color: #050a14; }
     @media (max-width: 700px) { #dex { inset: 60px 8px 120px 8px; } }
     .panel { position: fixed; background: #0b1630e6; color: #dff6ff; font: 11px monospace; border: 2px solid #35e0ff;
       border-radius: 4px; padding: 6px; box-shadow: 0 0 0 2px #050a14; }
@@ -160,15 +162,21 @@ export function mountUI(scene: OfficeScene) {
     $('#dex').hidden = false;
     drawDex();
   }
+  const PACK_NAMES: Record<string, string> = { dusk: 'Digimon', pmd: 'Pokémon', bn5: 'Mega Man' };
+  let dexPack = '';
   function drawDex() {
-    const q = $<HTMLInputElement>('#dex-q').value.trim().replace('#', '');
+    const packs = [...new Set(allSprites().map((s) => s.pack))];
+    if (!packs.includes(dexPack)) dexPack = packs[0] ?? '';
+    $('#dex-tabs').innerHTML = packs.map((p) => `<button data-p="${p}" class="${p === dexPack ? 'on' : ''}">${esc(PACK_NAMES[p] ?? p)}</button>`).join(' ');
+    $('#dex-tabs').querySelectorAll<HTMLElement>('button').forEach((b) => (b.onclick = () => { dexPack = b.dataset.p!; drawDex(); }));
+    const q = $<HTMLInputElement>('#dex-q').value.trim().toLowerCase().replace('#', '');
     const cur = dexForm ? spriteFor(dexForm).id : '';
-    const list = allSprites().filter((s) => !q || s.id.includes(q) || String(s.frame[0]) === q || String(s.frame[1]) === q);
+    const list = allSprites().filter((s) => s.pack === dexPack && (!q || s.id.includes(q) || s.name.toLowerCase().includes(q)));
     $('#dex-grid').innerHTML = list.length ? list.map((s) => {
-      const z = s.frame[1] > 32 ? 1 : 2;
+      const z = Math.max(s.frame[0], s.frame[1]) > 40 ? 1 : 2;
       return `<div class="dx ${s.id === cur ? 'cur' : ''}" data-id="${s.id}"><i style="width:${s.frame[0] * z}px;height:${s.frame[1] * z}px;
-        background-image:url(${s.url});background-size:auto ${s.frame[1] * z}px;background-position:-${s.thumb * s.frame[0] * z}px 0"></i>
-        <span>#${s.id.replace(/^\D+_/, '')}</span></div>`;
+        background-image:url(${s.url});background-size:${s.cols * s.frame[0] * z}px auto;background-position:-${(s.thumb % s.cols) * s.frame[0] * z}px -${Math.floor(s.thumb / s.cols) * s.frame[1] * z}px"></i>
+        <span title="${esc(s.name)}">${esc(s.name)}</span></div>`;
     }).join('') : '<p>No sprite packs loaded. Run <code>npm run import-dusk -- &lt;overworld dir&gt;</code>.</p>';
     $('#dex-grid').querySelectorAll<HTMLElement>('.dx').forEach((el) => (el.onclick = () => {
       const s = allSprites().find((x) => x.id === el.dataset.id);
@@ -191,7 +199,7 @@ export function mountUI(scene: OfficeScene) {
     if (scene.selected) showAgent(scene.selected);
   };
   $('#h-dex').onclick = () => openDex('HIRE FROM DIGIDEX', null, (s) => {
-    const name = `#${s.id.replace(/^\D+_/, '')}`;
+    const name = s.name;
     const line = addCustomLine(name);
     setSpriteFor(line.forms[0].id, s.id);
     const a = scene.hire(line.id, undefined, $<HTMLSelectElement>('#h-role').value as Role,

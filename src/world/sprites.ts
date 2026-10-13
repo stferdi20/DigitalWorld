@@ -5,8 +5,10 @@ import duskMap from '../data/dusk-map.json';
 
 /** A loaded sprite from any pack, keyed by its manifest id (e.g. `dusk_0147`). */
 export interface SpriteInfo {
-  id: string; key: string; url: string; frame: [number, number];
+  id: string; name: string; pack: string; key: string; url: string; frame: [number, number];
   anchor: [number, number]; scale: number; thumb: number;
+  /** Frames per row in the sheet (for thumbnails). */
+  cols: number;
   mirror: Partial<Record<AnimName, AnimName>>;
 }
 const loaded = new Map<string, SpriteInfo>();
@@ -36,7 +38,7 @@ export function animFor(formId: string, anim: AnimName): { key: string; flip: bo
 }
 
 function placeholderInfo(formId: string): SpriteInfo {
-  return { id: formId, key: `ph_${formId}`, url: '', frame: [32, 32], anchor: [0.5, 1], scale: 1, thumb: 0, mirror: {} };
+  return { id: formId, name: formId, pack: '', key: `ph_${formId}`, url: '', frame: [32, 32], anchor: [0.5, 1], scale: 1, thumb: 0, cols: 1, mirror: {} };
 }
 
 /**
@@ -68,8 +70,9 @@ export function registerAnims(scene: Phaser.Scene) {
       const key = `sp_${s.id}`;
       if (!scene.textures.exists(key)) continue;
       loaded.set(s.id, {
-        id: s.id, key, url: `assets/packs/${p}/${s.sheet}`, frame: s.frame,
+        id: s.id, name: s.name ?? `#${s.id.replace(/^\D+_/, '')}`, pack: p, key, url: `assets/packs/${p}/${s.sheet}`, frame: s.frame,
         anchor: s.anchor ?? [0.5, 1], scale: s.scale ?? 1, thumb: s.thumb ?? 0, mirror: s.mirror ?? {},
+        cols: Math.max(1, Math.floor(scene.textures.get(key).getSourceImage().width / s.frame[0])),
       });
       makeAnims(scene, key, s);
     }

@@ -43,6 +43,17 @@ npm run import-dusk -- path/to/out/sprites/overworld   # → public/assets/packs
 - **Which set is which Digimon:** `src/data/dusk-map.json` holds the ones identified so far. For the rest, click an agent, choose **Pick … sprite (Digidex)**, and click a sprite. Picks are saved in your browser. **Export picks** downloads them as `dusk-map.json`; drop that file into `src/data/` to make them the defaults.
 - **Hire from Digidex…** hires any sprite straight away as a one-form agent.
 
+## Pokémon (PMD Explorers of Sky) and Mega Man (BN5 DS) sprites
+
+Extract with the tools in `tools/rom-extract/` (see `docs/rom-extraction.md`), then import into local packs:
+
+```bash
+python3 tools/rom-extract/import_pmd.py path/to/out/pokemon          # → packs/pmd  (named, 8-direction PMDCollab sheets)
+python3 tools/rom-extract/import_bn5.py path/to/out/sprites/bn       # → packs/bn5  (overworld man* characters)
+```
+
+The Digidex has a tab per game. Pokémon evolution lines (Charmander, Gastly, Magnemite, Pichu, Machop) and MegaMan.EXE are in the roster. Any sprite from any game can be picked for any form, or hired directly.
+
 ## Other sprite packs (Mega Man, Pokémon…)
 
 1. Put a sheet in `assets-raw/`, then run `npm run slice -- assets-raw/foo.png --id foo --pack megaman`.

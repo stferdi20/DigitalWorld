@@ -1,56 +1,375 @@
 {
   "lines": [
-    { "id": "veemon", "name": "Veemon line", "home": "training", "color": "#3a7bff",
+    {
+      "id": "veemon",
+      "name": "Veemon line",
+      "home": "training",
+      "color": "#3a7bff",
       "forms": [
-        { "id": "chibomon", "name": "Chibomon", "stage": "in-training" },
-        { "id": "veemon", "name": "Veemon", "stage": "rookie" },
-        { "id": "exveemon", "name": "ExVeemon", "stage": "champion" },
-        { "id": "paildramon", "name": "Paildramon", "stage": "ultimate" },
-        { "id": "imperialdramon", "name": "Imperialdramon", "stage": "mega" } ] },
-    { "id": "lucemon", "name": "Lucemon line", "home": "dark", "color": "#f2e6c8",
+        {
+          "id": "chibomon",
+          "name": "Chibomon",
+          "stage": "in-training"
+        },
+        {
+          "id": "veemon",
+          "name": "Veemon",
+          "stage": "rookie"
+        },
+        {
+          "id": "exveemon",
+          "name": "ExVeemon",
+          "stage": "champion"
+        },
+        {
+          "id": "paildramon",
+          "name": "Paildramon",
+          "stage": "ultimate"
+        },
+        {
+          "id": "imperialdramon",
+          "name": "Imperialdramon",
+          "stage": "mega"
+        }
+      ]
+    },
+    {
+      "id": "lucemon",
+      "name": "Lucemon line",
+      "home": "dark",
+      "color": "#f2e6c8",
       "forms": [
-        { "id": "lucemon", "name": "Lucemon", "stage": "rookie" },
-        { "id": "lucemon_fm", "name": "Lucemon Falldown Mode", "stage": "ultimate" },
-        { "id": "lucemon_sm", "name": "Lucemon Satan Mode", "stage": "mega" } ] },
-    { "id": "impmon", "name": "Impmon line", "home": "dark", "color": "#7a2f8f",
+        {
+          "id": "lucemon",
+          "name": "Lucemon",
+          "stage": "rookie"
+        },
+        {
+          "id": "lucemon_fm",
+          "name": "Lucemon Falldown Mode",
+          "stage": "ultimate"
+        },
+        {
+          "id": "lucemon_sm",
+          "name": "Lucemon Satan Mode",
+          "stage": "mega"
+        }
+      ]
+    },
+    {
+      "id": "impmon",
+      "name": "Impmon line",
+      "home": "dark",
+      "color": "#7a2f8f",
       "forms": [
-        { "id": "impmon", "name": "Impmon", "stage": "rookie" },
-        { "id": "beelzemon", "name": "Beelzemon", "stage": "mega" } ] },
-    { "id": "agumon", "name": "Agumon line", "home": "training", "color": "#f0a020",
+        {
+          "id": "impmon",
+          "name": "Impmon",
+          "stage": "rookie"
+        },
+        {
+          "id": "beelzemon",
+          "name": "Beelzemon",
+          "stage": "mega"
+        }
+      ]
+    },
+    {
+      "id": "agumon",
+      "name": "Agumon line",
+      "home": "training",
+      "color": "#f0a020",
       "forms": [
-        { "id": "koromon", "name": "Koromon", "stage": "in-training" },
-        { "id": "agumon", "name": "Agumon", "stage": "rookie" },
-        { "id": "greymon", "name": "Greymon", "stage": "champion" },
-        { "id": "metalgreymon", "name": "MetalGreymon", "stage": "ultimate" },
-        { "id": "wargreymon", "name": "WarGreymon", "stage": "mega" } ],
-      "dark": { "from": "greymon", "to": { "id": "skullgreymon", "name": "SkullGreymon", "stage": "ultimate" } } },
-    { "id": "hagurumon", "name": "Hagurumon line", "home": "machine", "color": "#9aa3ad",
+        {
+          "id": "koromon",
+          "name": "Koromon",
+          "stage": "in-training"
+        },
+        {
+          "id": "agumon",
+          "name": "Agumon",
+          "stage": "rookie"
+        },
+        {
+          "id": "greymon",
+          "name": "Greymon",
+          "stage": "champion"
+        },
+        {
+          "id": "metalgreymon",
+          "name": "MetalGreymon",
+          "stage": "ultimate"
+        },
+        {
+          "id": "wargreymon",
+          "name": "WarGreymon",
+          "stage": "mega"
+        }
+      ],
+      "dark": {
+        "from": "greymon",
+        "to": {
+          "id": "skullgreymon",
+          "name": "SkullGreymon",
+          "stage": "ultimate"
+        }
+      }
+    },
+    {
+      "id": "hagurumon",
+      "name": "Hagurumon line",
+      "home": "machine",
+      "color": "#9aa3ad",
       "forms": [
-        { "id": "hagurumon", "name": "Hagurumon", "stage": "rookie" },
-        { "id": "guardromon", "name": "Guardromon", "stage": "champion" },
-        { "id": "andromon", "name": "Andromon", "stage": "ultimate" },
-        { "id": "hiandromon", "name": "HiAndromon", "stage": "mega" } ] },
-    { "id": "blackagumon", "name": "BlackAgumon line", "home": "machine", "color": "#3b3f46",
+        {
+          "id": "hagurumon",
+          "name": "Hagurumon",
+          "stage": "rookie"
+        },
+        {
+          "id": "guardromon",
+          "name": "Guardromon",
+          "stage": "champion"
+        },
+        {
+          "id": "andromon",
+          "name": "Andromon",
+          "stage": "ultimate"
+        },
+        {
+          "id": "hiandromon",
+          "name": "HiAndromon",
+          "stage": "mega"
+        }
+      ]
+    },
+    {
+      "id": "blackagumon",
+      "name": "BlackAgumon line",
+      "home": "machine",
+      "color": "#3b3f46",
       "forms": [
-        { "id": "blackagumon", "name": "BlackAgumon", "stage": "rookie" },
-        { "id": "darktyrannomon", "name": "DarkTyrannomon", "stage": "champion" },
-        { "id": "metaltyrannomon", "name": "MetalTyrannomon", "stage": "ultimate" },
-        { "id": "machinedramon", "name": "Machinedramon", "stage": "mega" } ] },
-    { "id": "candlemon", "name": "Candlemon line", "home": "dark", "color": "#e8603c",
+        {
+          "id": "blackagumon",
+          "name": "BlackAgumon",
+          "stage": "rookie"
+        },
+        {
+          "id": "darktyrannomon",
+          "name": "DarkTyrannomon",
+          "stage": "champion"
+        },
+        {
+          "id": "metaltyrannomon",
+          "name": "MetalTyrannomon",
+          "stage": "ultimate"
+        },
+        {
+          "id": "machinedramon",
+          "name": "Machinedramon",
+          "stage": "mega"
+        }
+      ]
+    },
+    {
+      "id": "candlemon",
+      "name": "Candlemon line",
+      "home": "dark",
+      "color": "#e8603c",
       "forms": [
-        { "id": "candlemon", "name": "Candlemon", "stage": "rookie" },
-        { "id": "wizardmon", "name": "Wizardmon", "stage": "champion" },
-        { "id": "skullsatamon", "name": "SkullSatamon", "stage": "ultimate" },
-        { "id": "piedmon", "name": "Piedmon", "stage": "mega" } ] },
-    { "id": "kokuwamon", "name": "Kokuwamon line", "home": "machine", "color": "#c9d2da",
+        {
+          "id": "candlemon",
+          "name": "Candlemon",
+          "stage": "rookie"
+        },
+        {
+          "id": "wizardmon",
+          "name": "Wizardmon",
+          "stage": "champion"
+        },
+        {
+          "id": "skullsatamon",
+          "name": "SkullSatamon",
+          "stage": "ultimate"
+        },
+        {
+          "id": "piedmon",
+          "name": "Piedmon",
+          "stage": "mega"
+        }
+      ]
+    },
+    {
+      "id": "kokuwamon",
+      "name": "Kokuwamon line",
+      "home": "machine",
+      "color": "#c9d2da",
       "forms": [
-        { "id": "kokuwamon", "name": "Kokuwamon", "stage": "rookie" },
-        { "id": "datamon", "name": "Datamon", "stage": "ultimate" } ] },
-    { "id": "demidevimon", "name": "DemiDevimon line", "home": "dark", "color": "#4b2a5e",
+        {
+          "id": "kokuwamon",
+          "name": "Kokuwamon",
+          "stage": "rookie"
+        },
+        {
+          "id": "datamon",
+          "name": "Datamon",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "demidevimon",
+      "name": "DemiDevimon line",
+      "home": "dark",
+      "color": "#4b2a5e",
       "forms": [
-        { "id": "demidevimon", "name": "DemiDevimon", "stage": "rookie" },
-        { "id": "devimon", "name": "Devimon", "stage": "champion" },
-        { "id": "myotismon", "name": "Myotismon", "stage": "ultimate" } ],
-      "dark": { "from": "devimon", "to": { "id": "skullmeramon", "name": "SkullMeramon", "stage": "ultimate" } } }
+        {
+          "id": "demidevimon",
+          "name": "DemiDevimon",
+          "stage": "rookie"
+        },
+        {
+          "id": "devimon",
+          "name": "Devimon",
+          "stage": "champion"
+        },
+        {
+          "id": "myotismon",
+          "name": "Myotismon",
+          "stage": "ultimate"
+        }
+      ],
+      "dark": {
+        "from": "devimon",
+        "to": {
+          "id": "skullmeramon",
+          "name": "SkullMeramon",
+          "stage": "ultimate"
+        }
+      }
+    },
+    {
+      "id": "charmander",
+      "name": "Charmander line (Pok\u00e9mon)",
+      "home": "training",
+      "color": "#f08030",
+      "forms": [
+        {
+          "id": "charmander",
+          "name": "Charmander",
+          "stage": "rookie"
+        },
+        {
+          "id": "charmeleon",
+          "name": "Charmeleon",
+          "stage": "champion"
+        },
+        {
+          "id": "charizard",
+          "name": "Charizard",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "gastly",
+      "name": "Gastly line (Pok\u00e9mon)",
+      "home": "dark",
+      "color": "#705898",
+      "forms": [
+        {
+          "id": "gastly",
+          "name": "Gastly",
+          "stage": "rookie"
+        },
+        {
+          "id": "haunter",
+          "name": "Haunter",
+          "stage": "champion"
+        },
+        {
+          "id": "gengar",
+          "name": "Gengar",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "magnemite",
+      "name": "Magnemite line (Pok\u00e9mon)",
+      "home": "machine",
+      "color": "#b8b8d0",
+      "forms": [
+        {
+          "id": "magnemite",
+          "name": "Magnemite",
+          "stage": "rookie"
+        },
+        {
+          "id": "magneton",
+          "name": "Magneton",
+          "stage": "champion"
+        }
+      ]
+    },
+    {
+      "id": "pichu",
+      "name": "Pichu line (Pok\u00e9mon)",
+      "home": "nursery",
+      "color": "#f8d030",
+      "forms": [
+        {
+          "id": "pichu",
+          "name": "Pichu",
+          "stage": "in-training"
+        },
+        {
+          "id": "pikachu",
+          "name": "Pikachu",
+          "stage": "rookie"
+        },
+        {
+          "id": "raichu",
+          "name": "Raichu",
+          "stage": "champion"
+        }
+      ]
+    },
+    {
+      "id": "machop",
+      "name": "Machop line (Pok\u00e9mon)",
+      "home": "training",
+      "color": "#c03028",
+      "forms": [
+        {
+          "id": "machop",
+          "name": "Machop",
+          "stage": "rookie"
+        },
+        {
+          "id": "machoke",
+          "name": "Machoke",
+          "stage": "champion"
+        },
+        {
+          "id": "machamp",
+          "name": "Machamp",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "megaman",
+      "name": "MegaMan.EXE (Mega Man)",
+      "home": "machine",
+      "color": "#3a7bff",
+      "forms": [
+        {
+          "id": "megaman_exe",
+          "name": "MegaMan.EXE",
+          "stage": "rookie"
+        }
+      ]
+    }
   ]
 }
