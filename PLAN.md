@@ -167,3 +167,46 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 ## 10. Open questions
 
 - None blocking. Next step: M0 (assets and sprite manifest).
+
+## 11. Merging Dusk, Pokémon (PMD Sky) and Mega Man (BN5) sprites
+
+**Where things are now**
+- This branch has the Dusk sprites (`import-dusk`) and maps (`tools/dusk/export_maps.py`).
+- `claude/inspiring-ride-uu4m98` has the extraction tools for all three ROMs in `tools/rom-extract/` and `docs/rom-extraction.md`. Its outputs only exist as local files or zips.
+- Engine side, the universal pack format (`SpriteManifest`: frame size, feet anchor, standard anim names, mirror) and multi-pack loading (`packs/index.json`) already exist. The Digidex already lists every loaded sprite.
+
+**What each source gives**
+
+| Source | Output | Directions | Frame size | Names |
+|---|---|---|---|---|
+| Digimon World Dusk | `overworld/NNNN/_sheet.png`, 9 or 6 frames | back, side (mirror for the other side), front | 32×32 / 32×64 / 64×64 | none (Digidex picks) |
+| PMD: Explorers of Sky | `NNNN_Name/<Anim>-Anim.png` + `AnimData.xml` (PMDCollab format) | 8 directions, one row each | per anim, in AnimData.xml (≈24–64px) | yes, from the ROM |
+| MMBN5 DS | `sprites/bn/<archive>/anim_NN.png` strips | unknown per archive: anim index → meaning needs a lookup | per archive | file names (`man*`, `pl*`, `em*`) |
+
+**Steps**
+1. **Bring the tools together.** Merge `inspiring-ride-uu4m98` into this branch, move `tools/dusk/export_maps.py` into `tools/rom-extract/`, and keep one `.gitignore` covering ROMs, `out*/` and `public/assets/packs/*`.
+2. **One importer per source, all writing the same pack format**, under `public/assets/packs/<pack>/` (gitignored):
+   - `import-dusk` (done) → pack `dusk`, ids `dusk_NNNN`.
+   - `import-pmd` → pack `pmd`, ids `pmd_<name>`. It reads `AnimData.xml` and builds one atlas per Pokémon at a uniform frame size, with the feet aligned using the Offsets/Shadow data. It then maps:
+     - Walk/Idle rows: down=0, right=2, up=4, left=6
+     - `work` ← Attack or Eat
+     - `happy` ← Pose or Hop
+     - `hurt` ← Hurt
+     - `sleep` ← Sleep, used for the 💤 idle state
+   - `import-bn5` → pack `bn5`, ids `bn5_<archive>`. It lays out each archive's `anim_NN` strips into one atlas. Because the anim meaning varies by archive type, a small `bn5-anims.json` lookup maps anim index → our anim names for each archive type. It gets filled in by looking at a few sheets for each of the `man*`, `pl*` and `em*` types.
+3. **Manifest additions**
+   - an optional 8-direction set, where `walk_down_left` etc. fall back to the 4 directions
+   - `name` per sprite
+   - `scale` per pack, so PMD and BN sprites sit at Dusk's size
+4. **Digidex:** pack tabs (Digimon · Pokémon · Mega Man), search by name, and the same pick/hire/export flow. Rename "Digimon line" to "Character line": a line's forms can come from any pack.
+5. **Rosters:**
+   - Pokémon evolution lines fit seniority directly (e.g. Charmander → Charmeleon → Charizard, Gastly → Haunter → Gengar).
+   - Mega Man navis become single-form lines, or "style changes" as their evolution.
+   - Mixed teams are allowed.
+6. **Later (optional):** a home area per franchise:
+   - a PMD Treasure Town / dungeon map
+   - a BN5 net area from the decoded backgrounds and tilesheets
+
+   Each would join the world as another area, connected by warps, the same way the Digi-Farms are.
+
+**Needed to start:** the extracted Pokémon and Mega Man outputs (zipped, each under 30 MB), or the two ROMs to extract here.

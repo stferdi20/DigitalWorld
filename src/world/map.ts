@@ -18,13 +18,20 @@ interface AreaDef {
   x: number; y: number; w: number; h: number;
   /** Where Digimon warp in/out, as a fraction of the map size (snapped to the nearest floor). */
   portal: [number, number];
+  /** Hand-placed workstations, in 8px cells (on the map's floor pads / consoles). */
+  desks?: [number, number][];
 }
+
+// DigiLab (maps 006/028 share a layout): the hex floor pads are workstations, the big
+// arrow pads are the roomier seats used upstairs for Megas.
+const HEX_PADS: [number, number][] = [[28, 13], [48, 13], [54, 17], [68, 18], [14, 21], [31, 30], [72, 25], [78, 29], [46, 37], [62, 37]];
+const BIG_PADS: [number, number][] = [[28, 20], [44, 18], [38, 33], [68, 30]];
 
 const GAP = 96;
 const OFF = { x: 512 + GAP, y: 384 + GAP };
 export const AREAS: AreaDef[] = [
-  { id: 'office', map: '006', label: 'DIGILAB · MAIN FLOOR', zone: 'office', storey: 1, x: OFF.x, y: OFF.y, w: 768, h: 384, portal: [0.12, 0.92] },
-  { id: 'exec', map: '028', label: 'DIGILAB · EXECUTIVE FLOOR', zone: 'office', storey: 2, x: OFF.x, y: OFF.y, w: 768, h: 384, portal: [0.12, 0.92] },
+  { id: 'office', map: '006', label: 'DIGILAB · MAIN FLOOR', zone: 'office', storey: 1, x: OFF.x, y: OFF.y, w: 768, h: 384, portal: [0.12, 0.92], desks: [...HEX_PADS, BIG_PADS[0], BIG_PADS[3]] },
+  { id: 'exec', map: '028', label: 'DIGILAB · EXECUTIVE FLOOR', zone: 'office', storey: 2, x: OFF.x, y: OFF.y, w: 768, h: 384, portal: [0.12, 0.92], desks: [...BIG_PADS, HEX_PADS[0], HEX_PADS[1]] },
   { id: 'machine', map: '054', label: 'SERVER FARM', zone: 'machine', x: OFF.x + 128, y: 0, w: 512, h: 384, portal: [0.5, 0.5] },
   { id: 'training', map: '055', label: 'TRAINING FARM', zone: 'training', x: OFF.x + 128, y: OFF.y + 384 + GAP, w: 512, h: 384, portal: [0.5, 0.5] },
   { id: 'dark', map: '061', label: 'DARK FARM', zone: 'dark', x: 0, y: OFF.y, w: 512, h: 384, portal: [0.5, 0.5] },
@@ -101,13 +108,18 @@ export function buildWorld(scene: Phaser.Scene): World {
     bg.lineBetween(from.x, from.y, to.x, to.y);
   }
 
-  const spots: Spot[] = [
-    ...pickDesks(areas.get('office')!, 12),
-    ...pickDesks(areas.get('exec')!, 6),
-  ];
+  const spots: Spot[] = [...desksFor(areas.get('office')!, 12), ...desksFor(areas.get('exec')!, 6)];
   const tr = areas.get('training')!;
   spots.push({ id: 'evolve-pad', area: 'training', ...tr.portalCell, facing: 'down', kind: 'evolve' });
   return { areas, spots };
+}
+
+/** The map's hand-placed workstations (snapped onto floor), or spread ones on the placeholder floor. */
+function desksFor(a: Area, max: number): Spot[] {
+  if (!a.desks || a.image instanceof Phaser.GameObjects.Rectangle) return pickDesks(a, max);
+  return a.desks.map(([x, y], i) => ({
+    id: `${a.id}-desk-${i + 1}`, area: a.id, ...nearestWalkable(a.walk, x, y), facing: 'down' as Facing, kind: 'desk' as const,
+  }));
 }
 
 /** Spread desks over open floor: cells with clear space around, far from each other and the entrance. */
