@@ -5,8 +5,8 @@
  */
 import type { AreaId } from './map';
 
-export type SfxEvent = 'assign' | 'done' | 'fail' | 'evolve' | 'warp' | 'hire' | 'select';
-export const SFX_EVENTS: SfxEvent[] = ['assign', 'done', 'fail', 'evolve', 'warp', 'hire', 'select'];
+export type SfxEvent = 'assign' | 'done' | 'fail' | 'evolve' | 'warp' | 'hire' | 'select' | 'attention';
+export const SFX_EVENTS: SfxEvent[] = ['assign', 'done', 'fail', 'evolve', 'warp', 'hire', 'select', 'attention'];
 
 interface SoundIndex { bgm: { id: string; seconds: number }[]; se: { id: string; seconds: number }[]; }
 interface Settings {
@@ -63,7 +63,7 @@ class AudioManager {
     const se = [...this.index.se].sort((a, b) => a.seconds - b.seconds);
     if (!se.length) return undefined;
     const at = (f: number) => se[Math.min(se.length - 1, Math.floor(se.length * f))].id;
-    return { select: at(0.05), assign: at(0.15), hire: at(0.35), warp: at(0.5), fail: at(0.6), done: at(0.8), evolve: at(0.97) }[ev];
+    return { select: at(0.05), assign: at(0.15), hire: at(0.35), warp: at(0.5), attention: at(0.45), fail: at(0.6), done: at(0.8), evolve: at(0.97) }[ev];
   }
 
   /** Called as the camera moves: crossfade to the area's song. */

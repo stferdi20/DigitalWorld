@@ -45,5 +45,7 @@ const pick = (re) => (html.match(re) || []).join('\n');
 const page = [pick(/<title>[\s\S]*?<\/title>/g), pick(/<style>[\s\S]*?<\/style>/g),
   pick(/<script[^>]*src=[^>]*><\/script>/g), pick(/<link[^>]*rel="modulepreload"[^>]*>/g), '<div id="game"></div>'].join('\n');
 fs.writeFileSync(path.join(OUT, 'page.html'), page);
+// the corner widget is a second page served next to it (a full document of its own)
+if (fs.existsSync(path.join(OUT, 'widget.html'))) console.log('widget page: widget.html');
 const files = execSync(`find ${OUT} -type f`).toString().trim().split('\n');
 console.log(`web/: ${files.length} files`);

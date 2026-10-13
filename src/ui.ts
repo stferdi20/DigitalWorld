@@ -18,6 +18,7 @@ export function mountUI(scene: OfficeScene) {
     <button id="speed"></button>
     <label><input type="checkbox" id="dark" checked> dark digivolution</label>
     <button id="snd-btn">♪ Sound</button>
+    <a id="widget-link" href="widget.html" style="color:#ffe680">Corner widget ↗</a>
   </div>
   <div id="left" class="panel">
     <h3>HIRE</h3>
