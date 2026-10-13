@@ -1,0 +1,7 @@
+# Ripped game assets are copyrighted (Bandai Namco, Nintendo/Chunsoft, Capcom).
+# Keep ROMs and extraction output local; never commit them to this public repo.
+*.nds
+*.3ds
+*.7z
+assets/ripped/
+out*/
