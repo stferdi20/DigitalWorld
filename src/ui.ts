@@ -200,7 +200,7 @@ export function mountUI(scene: OfficeScene) {
   };
   $('#h-dex').onclick = () => openDex('HIRE FROM DIGIDEX', null, (s) => {
     const name = s.name;
-    const line = addCustomLine(name);
+    const line = addCustomLine(name, s.pack === 'pmd' ? 'pokemon' : s.pack === 'bn5' ? 'net' : 'training');
     setSpriteFor(line.forms[0].id, s.id);
     const a = scene.hire(line.id, undefined, $<HTMLSelectElement>('#h-role').value as Role,
       $<HTMLInputElement>('#h-name').value || undefined);

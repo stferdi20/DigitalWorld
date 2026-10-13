@@ -35,7 +35,7 @@ export const SENIORITY: Record<Stage, string> = {
   'in-training': 'Intern', rookie: 'Junior', champion: 'Mid', ultimate: 'Senior', mega: 'Lead',
 };
 
-export type Zone = 'office' | 'dark' | 'machine' | 'nursery' | 'training';
+export type Zone = 'office' | 'dark' | 'machine' | 'nursery' | 'training' | 'pokemon' | 'net';
 
 export interface DigimonForm { id: string; name: string; stage: Stage; }
 export interface EvolutionLine {

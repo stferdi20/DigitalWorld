@@ -54,6 +54,17 @@ python3 tools/rom-extract/import_bn5.py path/to/out/sprites/bn       # → packs
 
 The Digidex has a tab per game. Pokémon evolution lines (Charmander, Gastly, Magnemite, Pichu, Machop) and MegaMan.EXE are in the roster. Any sprite from any game can be picked for any form, or hired directly.
 
+## Places from other games
+
+Below the Digital World there are home areas for the other games: Treasure Town (PMD ground map `T00P01`) for Pokémon, and a BN5 net area (`st8200`) for Mega Man. These renders carry no collision data, so `place_walk.py` works out walkable floor from colour. It keeps only the largest connected floor region and never lets anyone stand on the black void.
+
+```bash
+python3 tools/rom-extract/place_walk.py places/001_T00P01.png pmd_town town
+python3 tools/rom-extract/place_walk.py out_bn5/places/st8200.png bn5_net net
+```
+
+To swap in another place, run the same command on another image and point `AREAS` in `src/world/map.ts` at its id. For example, use Wigglytuff's Guild (`004_T00P04A`), or ACDC (`st0400`) with mode `town`.
+
 ## Other sprite packs (Mega Man, Pokémon…)
 
 1. Put a sheet in `assets-raw/`, then run `npm run slice -- assets-raw/foo.png --id foo --pack megaman`.

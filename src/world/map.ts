@@ -9,10 +9,11 @@ import type { Facing, Zone } from '../data/types';
  */
 export const CELL = 8;
 
-export type AreaId = 'office' | 'exec' | 'machine' | 'dark' | 'nursery' | 'training';
+export type AreaId = 'office' | 'exec' | 'machine' | 'dark' | 'nursery' | 'training' | 'pokemon' | 'net';
 
 interface AreaDef {
-  id: AreaId; map: string; label: string; zone: Zone;
+  /** `map` is a file in assets/packs/<pack>/ (default pack: dusk-maps). */
+  id: AreaId; map: string; pack?: string; label: string; zone: Zone;
   /** Office storey shown by the floor selector; farms are outdoors (always visible). */
   storey?: number;
   x: number; y: number; w: number; h: number;
@@ -29,6 +30,7 @@ const BIG_PADS: [number, number][] = [[28, 20], [44, 18], [38, 33], [68, 30]];
 
 const GAP = 96;
 const OFF = { x: 512 + GAP, y: 384 + GAP };
+const ROW3 = OFF.y + 384 + GAP + 384 + GAP * 2;
 export const AREAS: AreaDef[] = [
   { id: 'office', map: '006', label: 'DIGILAB · MAIN FLOOR', zone: 'office', storey: 1, x: OFF.x, y: OFF.y, w: 768, h: 384, portal: [0.12, 0.92], desks: [...HEX_PADS, BIG_PADS[0], BIG_PADS[3]] },
   { id: 'exec', map: '028', label: 'DIGILAB · EXECUTIVE FLOOR', zone: 'office', storey: 2, x: OFF.x, y: OFF.y, w: 768, h: 384, portal: [0.12, 0.92], desks: [...BIG_PADS, HEX_PADS[0], HEX_PADS[1]] },
@@ -36,9 +38,12 @@ export const AREAS: AreaDef[] = [
   { id: 'training', map: '055', label: 'TRAINING FARM', zone: 'training', x: OFF.x + 128, y: OFF.y + 384 + GAP, w: 512, h: 384, portal: [0.5, 0.5] },
   { id: 'dark', map: '061', label: 'DARK FARM', zone: 'dark', x: 0, y: OFF.y, w: 512, h: 384, portal: [0.5, 0.5] },
   { id: 'nursery', map: '057', label: 'DIGI-EGG NURSERY', zone: 'nursery', x: OFF.x + 768 + GAP, y: OFF.y, w: 512, h: 384, portal: [0.5, 0.5] },
+  // Other games' home areas, below the Digital World (images from places_*.zip, walk grids from place_walk.py)
+  { id: 'pokemon', map: 'pmd_town', pack: 'places', label: 'TREASURE TOWN (POKÉMON)', zone: 'pokemon', x: 0, y: ROW3, w: 960, h: 720, portal: [0.54, 0.44] },
+  { id: 'net', map: 'bn5_net', pack: 'places', label: 'NET AREA (MEGA MAN)', zone: 'net', x: 960 + GAP, y: ROW3, w: 1280, h: 752, portal: [0.76, 0.84] },
 ];
-export const WORLD_W = OFF.x + 768 + GAP + 512;
-export const WORLD_H = OFF.y + 384 + GAP + 384;
+export const WORLD_W = Math.max(...AREAS.map((a) => a.x + a.w));
+export const WORLD_H = Math.max(...AREAS.map((a) => a.y + a.h));
 
 export interface Cell { x: number; y: number; }
 export interface Area extends AreaDef {
@@ -62,8 +67,9 @@ export const cellCenter = (a: Area, c: Cell) => ({ x: a.x + c.x * CELL + CELL / 
 /** Queue the map images and walk grids. Missing files fall back to a plain placeholder floor. */
 export function preloadMaps(scene: Phaser.Scene) {
   for (const a of AREAS) {
-    scene.load.image(`map_${a.map}`, `assets/packs/dusk-maps/${a.map}.png`);
-    scene.load.json(`walk_${a.map}`, `assets/packs/dusk-maps/${a.map}.json`);
+    const pack = a.pack ?? 'dusk-maps';
+    scene.load.image(`map_${a.map}`, `assets/packs/${pack}/${a.map}.png`);
+    scene.load.json(`walk_${a.map}`, `assets/packs/${pack}/${a.map}.json`);
   }
 }
 
@@ -102,7 +108,7 @@ export function buildWorld(scene: Phaser.Scene): World {
   const office = areas.get('office')!;
   const from = cellCenter(office, office.portalCell);
   bg.lineStyle(2, 0x35e0ff, 0.35);
-  for (const id of ['machine', 'dark', 'nursery', 'training'] as AreaId[]) {
+  for (const id of ['machine', 'dark', 'nursery', 'training', 'pokemon', 'net'] as AreaId[]) {
     const a = areas.get(id)!;
     const to = cellCenter(a, a.portalCell);
     bg.lineBetween(from.x, from.y, to.x, to.y);

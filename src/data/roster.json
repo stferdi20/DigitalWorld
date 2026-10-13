@@ -251,7 +251,7 @@
     {
       "id": "charmander",
       "name": "Charmander line (Pok\u00e9mon)",
-      "home": "training",
+      "home": "pokemon",
       "color": "#f08030",
       "forms": [
         {
@@ -274,7 +274,7 @@
     {
       "id": "gastly",
       "name": "Gastly line (Pok\u00e9mon)",
-      "home": "dark",
+      "home": "pokemon",
       "color": "#705898",
       "forms": [
         {
@@ -297,7 +297,7 @@
     {
       "id": "magnemite",
       "name": "Magnemite line (Pok\u00e9mon)",
-      "home": "machine",
+      "home": "pokemon",
       "color": "#b8b8d0",
       "forms": [
         {
@@ -315,7 +315,7 @@
     {
       "id": "pichu",
       "name": "Pichu line (Pok\u00e9mon)",
-      "home": "nursery",
+      "home": "pokemon",
       "color": "#f8d030",
       "forms": [
         {
@@ -338,7 +338,7 @@
     {
       "id": "machop",
       "name": "Machop line (Pok\u00e9mon)",
-      "home": "training",
+      "home": "pokemon",
       "color": "#c03028",
       "forms": [
         {
@@ -361,7 +361,7 @@
     {
       "id": "megaman",
       "name": "MegaMan.EXE (Mega Man)",
-      "home": "machine",
+      "home": "net",
       "color": "#3a7bff",
       "forms": [
         {
@@ -374,7 +374,7 @@
     {
       "id": "larvitar",
       "name": "Larvitar line (Pok\u00e9mon)",
-      "home": "training",
+      "home": "pokemon",
       "color": "#a8b820",
       "forms": [
         {
@@ -397,7 +397,7 @@
     {
       "id": "riolu",
       "name": "Riolu line (Pok\u00e9mon)",
-      "home": "training",
+      "home": "pokemon",
       "color": "#3a6ec8",
       "forms": [
         {
@@ -415,7 +415,7 @@
     {
       "id": "houndour",
       "name": "Houndour line (Pok\u00e9mon)",
-      "home": "dark",
+      "home": "pokemon",
       "color": "#3a3030",
       "forms": [
         {
@@ -433,7 +433,7 @@
     {
       "id": "beldum",
       "name": "Beldum line (Pok\u00e9mon)",
-      "home": "machine",
+      "home": "pokemon",
       "color": "#4a78b8",
       "forms": [
         {
@@ -456,7 +456,7 @@
     {
       "id": "porygon",
       "name": "Porygon line (Pok\u00e9mon)",
-      "home": "machine",
+      "home": "pokemon",
       "color": "#f080a0",
       "forms": [
         {
@@ -479,7 +479,7 @@
     {
       "id": "darkrai",
       "name": "Darkrai (Pok\u00e9mon)",
-      "home": "dark",
+      "home": "pokemon",
       "color": "#202028",
       "forms": [
         {

@@ -1,5 +1,5 @@
 import data from './roster.json';
-import type { DigimonForm, EvolutionLine } from './types';
+import type { DigimonForm, EvolutionLine, Zone } from './types';
 
 export const LINES = data.lines as EvolutionLine[];
 
@@ -19,9 +19,9 @@ export function allForms(): { form: DigimonForm; line: EvolutionLine }[] {
 
 let customN = 0;
 /** A one-form line for hiring any sprite straight from the Digidex. */
-export function addCustomLine(name: string): EvolutionLine {
+export function addCustomLine(name: string, home: Zone = 'training'): EvolutionLine {
   const id = `custom_${++customN}`;
-  const line: EvolutionLine = { id, name, home: 'training', color: '#888888', forms: [{ id, name, stage: 'rookie' }] };
+  const line: EvolutionLine = { id, name, home, color: '#888888', forms: [{ id, name, stage: 'rookie' }] };
   LINES.push(line);
   return line;
 }
