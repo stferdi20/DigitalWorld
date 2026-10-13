@@ -47,3 +47,20 @@ header byte 3 = animation count, then `u32` animation offsets (relative to +4); 
 (tileset, palette, sub-anim, object list pointers, `u16 delay`, `u16 flags`; flags&0xC0 ends the animation).
 Object entries are 5 bytes (tile, x s8, y s8, size|hflip<<6|vflip<<7, shape), terminated by `FF FF FF FF FF`.
 Text (`*.msg`) uses the Battle Network custom charset and is not decoded.
+
+## Places (maps)
+
+| Game | Command | Result |
+| --- | --- | --- |
+| Digimon Dusk | `dusk_maps.py fs/dat/map out/places` | 265 field maps (`<id>.png`, plus `<id>_layerB.png` overlay). Map 0 is a dev test map. |
+| PMD Sky | `pmd_maps.py game.nds out/places` | All 443 towns/buildings/scenes from `MAP_BG/bg_list.dat` (SkyTemple BMA/BPC/BPL/BPA), animated ones also as GIF. |
+| BN5 DS | `bn5_maps.py out/raw out/places` | 60 of 82 areas. Run `bn5.py` first. |
+
+Dusk map format: each map `<id>` has layers `<id>a` and `<id>b`, each with `.c` (u32 size + 4bpp tiles), `.p` (u32 size + BGR555 palettes)
+and `.s` (u16 width px, u16 height px + GBA screen entries); all RLE (0x30). `.0t/.a/.d` (collision/attributes/events) are not decoded.
+
+BN5 area format: `st<id>.pib` = header of u32 offsets, first LZ10 block = tiles; `.clb` = u32 size + 256-colour palette;
+`.srb` = byte0 width tiles, byte1 height tiles, byte2 layers-1, u32@4 offset of LZ10 screen data (layers back to back).
+Real-world areas (`st0xxx`) are 8bpp; Cyberworld areas (`st8xxx`/`st9xxx`) are 4bpp with per-tile palettes.
+Stages without their own `.pib/.clb` reuse the nearest earlier stage in the same area. Small black blotches are animated tiles
+(second LZ block in `.pib`) that are not applied. 22 areas still fail (missing or unparsed tile banks).
