@@ -14,7 +14,7 @@ export function mountUI(scene: OfficeScene) {
   <div id="topbar" class="panel">
     <b>DIGITAL WORLD OFFICE</b>
     <span id="stats"></span>
-    <span><button id="st-dn" title="PgDn">▼</button> <b id="storey"></b> <button id="st-up" title="PgUp">▲</button></span>
+    <span id="floors"><button id="st-dn" title="PgDn">▼</button> <b id="storey"></b> <button id="st-up" title="PgUp">▲</button></span>
     <button id="speed"></button>
     <label><input type="checkbox" id="dark" checked> dark digivolution</label>
     <button id="snd-btn">♪ Sound</button>
@@ -32,6 +32,10 @@ export function mountUI(scene: OfficeScene) {
   </div>
   <div id="right" class="panel" hidden></div>
   <div id="board" class="panel"><div><h4>DOING</h4><div id="doing"></div></div><div><h4>DONE</h4><div id="done"></div></div></div>
+  <nav id="places" class="panel"></nav>
+  <div id="vignette"></div>
+  <div id="banner"></div>
+  <div id="fader"></div>
   <div id="snd" class="panel" hidden></div>
   <div id="dex" class="panel" hidden>
     <div class="dex-head"><b id="dex-title">DIGIDEX</b>
@@ -44,7 +48,25 @@ export function mountUI(scene: OfficeScene) {
   </div>
   <style>
     [hidden] { display: none !important; }
-    #snd { top: 52px; right: 8px; width: 300px; max-height: calc(100vh - 190px); overflow: auto; z-index: 11; }
+    #places { top: 52px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; flex-wrap: wrap;
+      justify-content: center; padding: 4px; width: max-content; max-width: calc(100vw - 32px); }
+    #places button { border-radius: 0; border-color: #1f5a7a; }
+    #places button:first-child { border-radius: 3px 0 0 3px; } #places button:last-child { border-radius: 0 3px 3px 0; }
+    #places button.on { background: #35e0ff; color: #050a14; border-color: #35e0ff; }
+    #places button .n { opacity: 0.6; margin-left: 4px; }
+    /* soften the map edges: a dark falloff toward the screen border plus a thin framed rim */
+    #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      background: radial-gradient(ellipse at center, transparent 55%, #050a14cc 88%, #050a14 100%);
+      box-shadow: inset 0 0 0 3px #050a14, inset 0 0 0 5px #35e0ff33, inset 0 0 60px 20px #050a14; }
+    #banner { position: fixed; top: 96px; left: 50%; transform: translateX(-50%); z-index: 2; pointer-events: none;
+      font: bold 13px monospace; letter-spacing: 0.2em; color: #ffe680; background: #0b1630e6; border: 2px solid #35e0ff;
+      border-left-width: 6px; border-right-width: 6px; padding: 6px 18px; opacity: 0; transition: opacity 0.4s; white-space: nowrap; }
+    #banner.show { opacity: 1; }
+    #fader { position: fixed; inset: 0; background: #050a14; opacity: 0; pointer-events: none; z-index: 2; transition: opacity 0.15s; }
+    #fader.on { opacity: 1; }
+    .panel { z-index: 3; }
+    @media (prefers-reduced-motion: reduce) { #banner { transition: none; } }
+    #snd { top: 92px; right: 8px; width: 300px; max-height: calc(100vh - 230px); overflow: auto; z-index: 11; }
     #snd .r { display: flex; gap: 4px; align-items: center; justify-content: space-between; }
     #snd select { max-width: 150px; }
     #dex { inset: 60px 220px 120px 220px; display: flex; flex-direction: column; z-index: 10; }
@@ -63,8 +85,8 @@ export function mountUI(scene: OfficeScene) {
     .panel button:hover { background: #1f3a5a; cursor: pointer; }
     .panel h3, .panel h4 { margin: 6px 0 4px; color: #ffe680; font-size: 11px; }
     #topbar { top: 8px; left: 8px; right: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    #left { top: 52px; left: 8px; width: 190px; max-height: calc(100vh - 190px); overflow: auto; display: flex; flex-direction: column; }
-    #right { top: 52px; right: 8px; width: 230px; max-height: calc(100vh - 190px); overflow: auto; }
+    #left { top: 92px; left: 8px; width: 190px; max-height: calc(100vh - 230px); overflow: auto; display: flex; flex-direction: column; }
+    #right { top: 92px; right: 8px; width: 230px; max-height: calc(100vh - 230px); overflow: auto; }
     #board { bottom: 8px; left: 8px; right: 8px; height: 100px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; overflow: hidden; }
     #board > div { overflow: auto; }
     .row { padding: 2px 4px; cursor: pointer; border-radius: 2px; }
@@ -87,6 +109,31 @@ export function mountUI(scene: OfficeScene) {
       $<HTMLSelectElement>('#h-role').value as Role, $<HTMLInputElement>('#h-name').value || undefined);
     if (!a) alert('No free desks!'); else scene.select(a);
   };
+  // ---- locations: one map at a time, switched from the tabs ----
+  const PLACES: { id: string; label: string }[] = [
+    { id: 'office', label: 'DigiLab' }, { id: 'machine', label: 'Server Farm' }, { id: 'dark', label: 'Dark Farm' },
+    { id: 'nursery', label: 'Nursery' }, { id: 'training', label: 'Training Farm' },
+    { id: 'pokemon', label: 'Treasure Town' }, { id: 'net', label: 'Net Area' },
+  ];
+  scene.onFade = (dark) => $('#fader').classList.toggle('on', dark);
+  let bannerTimer = 0;
+  scene.onPlaceChanged = (label) => {
+    const b = $('#banner');
+    b.textContent = label;
+    b.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = window.setTimeout(() => b.classList.remove('show'), 1800);
+    refresh();
+  };
+  function drawPlaces() {
+    const count = (id: string) => [...scene.agents.values()].filter((a) => (a.area === 'exec' ? 'office' : a.area) === id).length;
+    $('#places').innerHTML = PLACES.map((p) => `<button data-place="${p.id}" class="${scene.place === p.id ? 'on' : ''}">${p.label}<span class="n">${count(p.id)}</span></button>`).join('');
+    $('#places').querySelectorAll<HTMLElement>('button').forEach((b) => (b.onclick = () => {
+      scene.select(null);
+      scene.goToPlace(b.dataset.place as Parameters<typeof scene.goToPlace>[0]);
+    }));
+    $('#floors').hidden = scene.place !== 'office';
+  }
   $('#st-up').onclick = () => scene.setStorey(scene.viewStorey + 1);
   $('#st-dn').onclick = () => scene.setStorey(scene.viewStorey - 1);
   $('#speed').onclick = () => { scene.speed = ({ 1: 2, 2: 4, 4: 1 } as Record<number, number>)[scene.speed]; refresh(); };
@@ -98,6 +145,7 @@ export function mountUI(scene: OfficeScene) {
   function refresh() {
     const agents = [...scene.agents.values()];
     $('#stats').textContent = `agents ${agents.length} · working ${agents.filter((a) => a.task).length}`;
+    drawPlaces();
     $('#storey').textContent = scene.viewStorey === 2 ? 'Floor 2 · Executive' : 'Floor 1 · Main';
     $('#speed').textContent = `Speed: ${scene.speed}x`;
     $('#list').innerHTML = agents.map((a) => `<div class="row ${a === scene.selected ? 'sel' : ''}" data-id="${a.id}">

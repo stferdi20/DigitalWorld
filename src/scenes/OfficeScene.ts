@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { Agent } from '../agents/Agent';
 import { lineById } from '../data/roster';
 import { STAGES, type Role, type Stage } from '../data/types';
-import { WORLD_H, WORLD_W, buildWorld, preloadMaps, type Spot, type World } from '../world/map';
+import { buildWorld, preloadMaps, type AreaId, type Spot, type World } from '../world/map';
 import { onSpriteLoaded, preloadPacks, registerAnims, spriteIdFor } from '../world/sprites';
 import { MockSource } from '../sources/MockSource';
 import { audio, type SfxEvent } from '../world/audio';
@@ -17,6 +17,12 @@ export class OfficeScene extends Phaser.Scene {
   selected: Agent | null = null;
   /** Storey currently shown (Sims-style floor selector). */
   viewStorey = 1;
+  /** The location on screen. The DigiLab's two floors are one location (see viewStorey). */
+  place: AreaId = 'office';
+  onPlaceChanged: (label: string) => void = () => {};
+  /** UI hook: dim the screen (true) / reveal it (false) around a location switch. */
+  onFade: (dark: boolean) => void = () => {};
+  private switchingTo: AreaId | null = null;
   /** Agent the camera is following (cleared when you drag the map). */
   following: Agent | null = null;
   /** UI hooks */
@@ -39,13 +45,13 @@ export class OfficeScene extends Phaser.Scene {
     this.source = new MockSource((e) => this.handle(e), () => [...this.agents.keys()], (id) => !!this.agents.get(id)?.atDesk);
 
     const cam = this.cameras.main;
-    const office = this.world.areas.get('office')!;
-    cam.setBounds(-200, -200, WORLD_W + 400, WORLD_H + 400).setRoundPixels(true);
-    cam.setZoom(Math.max(1, Math.round(this.scale.width / office.w * 10) / 10));
-    cam.centerOn(office.x + office.w / 2, office.y + office.h / 2);
+    cam.setRoundPixels(true);
+    for (const a of this.world.areas.values()) a.labelText.setVisible(false);   // the location banner names the place
+    this.goToPlace('office', true);
+    this.scale.on('resize', () => this.fitCamera());
 
     this.input.on('wheel', (_p: unknown, _o: unknown, _dx: number, dy: number) => {
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), 0.4, 5));
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.9 : 1.1), this.minZoom(), 4));
     });
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => {
       if (!p.isDown) return;
@@ -95,10 +101,57 @@ export class OfficeScene extends Phaser.Scene {
     this.onSelect(a);
   }
 
-  /** Bring the camera to an agent and keep it there: show their floor and follow them as they walk. */
+  // ---- one location at a time, like the DS games: the camera never leaves the current map ----
+  /** Smallest zoom at which the map still covers the whole screen (so no edge or void shows). */
+  private minZoom() {
+    const a = this.world.areas.get(this.place)!;
+    return Math.max(this.scale.width / a.w, this.scale.height / a.h);
+  }
+
+  private fitCamera() {
+    const a = this.world.areas.get(this.place)!;
+    const cam = this.cameras.main;
+    cam.setBounds(a.x, a.y, a.w, a.h);
+    if (cam.zoom < this.minZoom()) cam.setZoom(this.minZoom());
+  }
+
+  /** Switch location with a short fade; the floor buttons pick the DigiLab storey. */
+  goToPlace(id: AreaId, instant = false) {
+    const place = id === 'exec' ? 'office' : id;
+    if (id === 'exec') this.viewStorey = 2;
+    if (id === 'office' && place !== this.place) this.viewStorey = this.viewStorey || 1;
+    const cam = this.cameras.main;
+    const go = () => {
+      this.place = place;
+      const a = this.world.areas.get(place)!;
+      cam.setBounds(a.x, a.y, a.w, a.h);
+      cam.setZoom(Math.max(this.minZoom(), Math.min(2, this.minZoom() * 1.25)));
+      if (!this.following) cam.centerOn(a.x + a.w / 2, a.y + a.h / 2);
+      this.applyStorey();
+      this.onPlaceChanged(this.placeLabel());
+      this.onAgentsChanged();
+    };
+    if (instant || place === this.place) { go(); return; }
+    if (this.switchingTo === place) return;          // already on the way
+    this.switchingTo = place;
+    this.onFade(true);
+    this.time.delayedCall(150, () => {
+      if (this.switchingTo !== place) return;        // superseded by a newer switch
+      go(); this.switchingTo = null; this.onFade(false);
+    });
+  }
+
+  placeLabel() {
+    const id = this.place === 'office' && this.viewStorey === 2 ? 'exec' : this.place;
+    return this.world.areas.get(id)!.label;
+  }
+
+  /** Bring the camera to an agent and keep it there: go to their location and floor, follow as they walk. */
   focus(a: Agent) {
     const st = this.world.areas.get(a.area)!.storey;
     if (st !== undefined && st !== this.viewStorey) this.setStorey(st);
+    const place = a.area === 'exec' ? 'office' : a.area;
+    if (place !== this.place) this.goToPlace(place);
     this.cameras.main.startFollow(a.sprite, true, 0.12, 0.12);
     this.following = a;
   }
@@ -108,15 +161,6 @@ export class OfficeScene extends Phaser.Scene {
     if (a.shown && this.cameras.main.worldView.contains(a.sprite.x, a.sprite.y)) audio.play(ev);
   }
 
-  /** The area under the camera's centre (respecting the viewed storey) picks the music. */
-  private focusArea() {
-    const c = this.cameras.main.midPoint;
-    for (const a of this.world.areas.values()) {
-      if (a.storey !== undefined && a.storey !== this.viewStorey) continue;
-      if (c.x >= a.x && c.x < a.x + a.w && c.y >= a.y && c.y < a.y + a.h) return a.id;
-    }
-    return null;
-  }
 
   handle(e: OfficeEvent) {
     if (e.type === 'agent.spawn') {
@@ -160,7 +204,9 @@ export class OfficeScene extends Phaser.Scene {
   // ---- floor selector: the DigiLab main floor and executive floor share one spot ----
   setStorey(n: number) {
     this.viewStorey = Phaser.Math.Clamp(n, 1, 2);
+    if (this.place !== 'office') { this.goToPlace('office'); return; }
     this.applyStorey();
+    if (this.place === 'office') this.onPlaceChanged(this.placeLabel());
     this.onAgentsChanged();
   }
 
@@ -168,7 +214,7 @@ export class OfficeScene extends Phaser.Scene {
     for (const a of this.world.areas.values()) {
       if (a.storey === undefined) continue;
       const on = a.storey === this.viewStorey;
-      a.image.setVisible(on); a.labelText.setVisible(on);
+      a.image.setVisible(on);
     }
   }
 
@@ -183,9 +229,10 @@ export class OfficeScene extends Phaser.Scene {
     if (sel && this.following === sel) {
       const st = this.world.areas.get(sel.area)!.storey;
       if (st !== undefined && st !== this.viewStorey) this.setStorey(st);
+      const place = sel.area === 'exec' ? 'office' : sel.area;
+      if (place !== this.place) this.goToPlace(place);     // followed them through a warp
     }
-    const focus = this.focusArea();
-    if (focus) audio.setArea(focus);
+    audio.setArea(this.place === 'office' && this.viewStorey === 2 ? 'exec' : this.place);
     for (const a of this.agents.values()) {
       const st = this.world.areas.get(a.area)!.storey;
       a.shown = st === undefined || st === this.viewStorey;
