@@ -1,5 +1,6 @@
 node_modules
 dist
+web/
 # Ripped game assets are copyrighted (Bandai Namco, Nintendo/Chunsoft, Capcom).
 # Keep ROMs and extraction output local; never commit them to this repo.
 *.nds

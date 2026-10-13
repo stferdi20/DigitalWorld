@@ -76,6 +76,11 @@ export function preloadPacks(scene: Phaser.Scene) {
   scene.load.once('filecomplete-json-packs-index', (_k: string, _t: string, index: { packs: string[] }) => {
     for (const p of index?.packs ?? []) scene.load.json(`pack:${p}`, `assets/packs/${p}/manifest.json`);
   });
+  scene.load.on('filecomplete', (key: string, _t: string, data: PackManifest) => {
+    if (!key.startsWith('pack:') || key.includes('#')) return;
+    const p = key.slice(5);
+    (data?.parts ?? []).forEach((f, i) => scene.load.json(`pack:${p}#${i}`, `assets/packs/${p}/${f}`));
+  });
 }
 
 export function registerAnims(scene: Phaser.Scene) {
@@ -83,13 +88,14 @@ export function registerAnims(scene: Phaser.Scene) {
   const index = scene.cache.json.get('packs-index') as { packs: string[] } | undefined;
   for (const p of index?.packs ?? []) {
     const pack = scene.cache.json.get(`pack:${p}`) as PackManifest | undefined;
-    for (const s of pack?.sprites ?? []) {
+    const parts = (pack?.parts ?? []).map((_, i) => scene.cache.json.get(`pack:${p}#${i}`) as PackManifest | undefined);
+    for (const s of [pack, ...parts].flatMap((m) => m?.sprites ?? [])) {
       const nFrames = Math.max(0, ...Object.values(s.anims).flat()) + 1;
       catalog.set(s.id, {
         manifest: s,
         info: {
           id: s.id, name: s.name ?? `#${s.id.replace(/^\D+_/, '')}`, pack: p, key: `sp_${s.id}`,
-          url: `assets/packs/${p}/${s.sheet}`, frame: s.frame, anchor: s.anchor ?? [0.5, 1], scale: s.scale ?? 1,
+          url: s.sheet.startsWith('data:') ? s.sheet : `assets/packs/${p}/${s.sheet}`, frame: s.frame, anchor: s.anchor ?? [0.5, 1], scale: s.scale ?? 1,
           thumb: s.thumb ?? 0, mirror: s.mirror ?? {}, cols: s.cols ?? Math.min(16, nFrames),
           has: new Set([...BASE_ANIMS, ...Object.keys(s.anims), ...Object.keys(s.mirror ?? {})]),
         },

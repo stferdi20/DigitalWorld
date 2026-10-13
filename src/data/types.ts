@@ -39,6 +39,8 @@ export interface SpriteManifest {
 export interface PackManifest {
   pack: string;
   sprites: SpriteManifest[];
+  /** Extra manifest files in the same folder whose sprites belong to this pack (large packs split up). */
+  parts?: string[];
 }
 
 export type Stage = 'in-training' | 'rookie' | 'champion' | 'ultimate' | 'mega';
