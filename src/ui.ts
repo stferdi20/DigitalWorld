@@ -12,8 +12,6 @@ export function mountUI(scene: OfficeScene) {
   <div id="topbar" class="panel">
     <b>DIGITAL WORLD OFFICE</b>
     <span id="stats"></span>
-    <button id="roof" title="R"></button>
-    <button id="walls" title="W"></button>
     <span><button id="st-dn" title="PgDn">▼</button> <b id="storey"></b> <button id="st-up" title="PgUp">▲</button></span>
     <button id="speed"></button>
     <label><input type="checkbox" id="dark" checked> dark digivolution</label>
@@ -80,8 +78,6 @@ export function mountUI(scene: OfficeScene) {
       $<HTMLSelectElement>('#h-role').value as Role, $<HTMLInputElement>('#h-name').value || undefined);
     if (!a) alert('No free desks!'); else scene.select(a);
   };
-  $('#roof').onclick = () => scene.cycleRoof();
-  $('#walls').onclick = () => scene.cycleWalls();
   $('#st-up').onclick = () => scene.setStorey(scene.viewStorey + 1);
   $('#st-dn').onclick = () => scene.setStorey(scene.viewStorey - 1);
   $('#speed').onclick = () => { scene.speed = ({ 1: 2, 2: 4, 4: 1 } as Record<number, number>)[scene.speed]; refresh(); };
@@ -93,12 +89,10 @@ export function mountUI(scene: OfficeScene) {
   function refresh() {
     const agents = [...scene.agents.values()];
     $('#stats').textContent = `agents ${agents.length} · working ${agents.filter((a) => a.task).length}`;
-    $('#roof').textContent = `Roof: ${scene.roofMode}`;
-    $('#walls').textContent = `Walls: ${scene.wallMode}`;
     $('#storey').textContent = scene.viewStorey === 2 ? 'Floor 2 · Executive' : 'Floor 1 · Main';
     $('#speed').textContent = `Speed: ${scene.speed}x`;
     $('#list').innerHTML = agents.map((a) => `<div class="row ${a === scene.selected ? 'sel' : ''}" data-id="${a.id}">
-      ${esc(a.name)} · ${esc(a.form.name)} <small>F${a.storey}</small> <span class="st ${a.state}">${a.state}</span></div>`).join('');
+      ${esc(a.name)} · ${esc(a.form.name)} <small>${a.area}</small> <span class="st ${a.state}">${a.state}</span></div>`).join('');
     $('#list').querySelectorAll<HTMLElement>('.row').forEach((r) => (r.onclick = () => {
       const a = scene.agents.get(r.dataset.id!); if (!a) return;
       scene.select(a); scene.cameras.main.pan(a.sprite.x, a.sprite.y, 400);

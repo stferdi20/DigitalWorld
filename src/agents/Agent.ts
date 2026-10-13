@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { STAGES, type AnimName, type DigimonForm, type EvolutionLine, type Facing, type Role } from '../data/types';
 import { animFor, spriteFor } from '../world/sprites';
-import { TILE, ZONES, findPath, randomWalkableIn, type Spot, type World } from '../world/map';
+import { areaForZone, cellCenter, findPath, randomWalkable, type Area, type AreaId, type Cell, type Spot, type World } from '../world/map';
 
 export type AgentState = 'idle' | 'assigned' | 'thinking' | 'working' | 'waiting_input' | 'blocked' | 'done' | 'evolving';
 
@@ -25,15 +25,13 @@ export class Agent {
   errors = 0;
   completed = 0;
   log: string[] = [];
-  private path: { x: number; y: number }[] = [];
+  private path: Cell[] = [];
   private facing: Facing = 'down';
   private idleTimer = 0;
   private bubbleIdle = 0;
   onChange?: () => void;
   onEvolved?: () => void;
-  /** 0..1 — how much the office roof hides this agent (set by the scene). */
-  hidden = 0;
-  /** False while the agent is on a storey the camera isn't showing. */
+  /** False while the agent is in an office storey the camera isn't showing. */
   shown = true;
 
   constructor(
@@ -49,8 +47,9 @@ export class Agent {
     public darkEvolution: () => boolean,
   ) {
     this.form = line.forms.find((f) => f.id === formId) ?? line.forms.find((f) => f.stage === 'rookie') ?? line.forms[0];
-    const start = randomWalkableIn(world.walkable, ZONES.nursery);
-    this.sprite = scene.add.sprite(start.x * TILE + 8, start.y * TILE + 16, spriteFor(this.form.id).key)
+    const nursery = world.areas.get('nursery')!;
+    const start = cellCenter(nursery, randomWalkable(nursery));
+    this.sprite = scene.add.sprite(start.x, start.y, spriteFor(this.form.id).key)
       .setInteractive({ useHandCursor: true });
     this.applyForm();
     this.label = scene.add.text(0, 0, name, { fontFamily: 'monospace', fontSize: '7px', color: '#fff', backgroundColor: '#0008' })
@@ -61,7 +60,14 @@ export class Agent {
     this.say(`Hatched as ${this.form.name}`);
   }
 
-  get tile() { return { x: Math.floor(this.sprite.x / TILE), y: Math.floor((this.sprite.y - 1) / TILE) }; }
+  /** The map the agent is on. */
+  area: AreaId = 'nursery';
+  private get here(): Area { return this.world.areas.get(this.area)!; }
+  /** Current cell within the current map. */
+  get cell(): Cell {
+    const a = this.here;
+    return { x: Math.floor((this.sprite.x - a.x) / 8), y: Math.floor((this.sprite.y - a.y) / 8) };
+  }
   get stageIndex() { return STAGES.indexOf(this.form.stage); }
   get xpNeeded() { return XP_TO_EVOLVE[this.stageIndex] ?? Infinity; }
 
@@ -84,34 +90,55 @@ export class Agent {
     this.onChange?.();
   }
 
-  /** Which office storey the agent is on (outdoors counts as 1). */
-  storey = 1;
-  /** Final destination when the route goes via the stairs. */
-  private pending: { x: number; y: number; storey: number } | null = null;
+  /** Final destination when the route warps to another map. */
+  private pending: { area: AreaId; cell: Cell } | null = null;
+  private warping = false;
 
-  private goTo(x: number, y: number, storey = 1) {
-    const t = this.tile;
-    if (storey === this.storey) {
+  private goTo(area: AreaId, cell: Cell) {
+    const here = this.here;
+    if (area === this.area) {
       this.pending = null;
-      this.path = findPath(this.world.storeys[storey - 1].walkable, t.x, t.y, x, y);
+      this.path = findPath(here.walk, this.cell, cell);
       return;
     }
-    const st = this.world.stairs;
-    this.pending = { x, y, storey };
-    this.path = findPath(this.world.storeys[this.storey - 1].walkable, t.x, t.y, st.x, st.y);
-    if (!this.path.length) { this.storey = storey; this.goTo(x, y, storey); } // already on the stairs
+    // walk to this map's warp point, warp, then continue in the other map
+    this.pending = { area, cell };
+    this.path = findPath(here.walk, this.cell, here.portalCell);
+    if (!this.path.length) this.warp();
+  }
+
+  /** DS-style warp: shrink into light, reappear at the destination map's warp point. */
+  private warp() {
+    const p = this.pending;
+    if (!p || this.warping) return;
+    this.warping = true;
+    const s = this.sprite;
+    const sx = s.scaleX, sy = s.scaleY;
+    this.scene.tweens.add({
+      targets: s, scaleX: sx * 0.1, scaleY: sy * 2, alpha: 0, duration: 220 / this.getSpeed(),
+      onComplete: () => {
+        const dest = this.world.areas.get(p.area)!;
+        const at = cellCenter(dest, dest.portalCell);
+        s.setPosition(at.x, at.y);
+        this.area = p.area;
+        this.scene.tweens.add({
+          targets: s, scaleX: sx, scaleY: sy, alpha: 1, duration: 220 / this.getSpeed(),
+          onComplete: () => { this.warping = false; this.goTo(p.area, p.cell); },
+        });
+      },
+    });
   }
 
   get atDesk() {
-    const t = this.tile;
-    return !this.path.length && !this.pending && t.x === this.desk.x && t.y === this.desk.y && this.storey === this.desk.storey;
+    const c = this.cell;
+    return !this.path.length && !this.pending && this.area === this.desk.area && Math.abs(c.x - this.desk.x) <= 1 && Math.abs(c.y - this.desk.y) <= 1;
   }
 
   /** Move to another desk (e.g. promoted to the executive floor). */
   moveDesk(desk: Spot) {
     this.desk = desk;
     if (this.state === 'assigned' || this.state === 'working' || this.state === 'thinking')
-      this.goTo(desk.x, desk.y, desk.storey);
+      this.goTo(desk.area, desk);
   }
 
   setState(s: AgentState) {
@@ -125,7 +152,7 @@ export class Agent {
   assign(title: string) {
     this.task = title; this.progress = 0;
     this.setState('assigned');
-    this.goTo(this.desk.x, this.desk.y, this.desk.storey);
+    this.goTo(this.desk.area, this.desk);
     this.say(`Assigned: ${title}`);
   }
 
@@ -145,9 +172,8 @@ export class Agent {
 
   private wanderHome() {
     this.setState('idle');
-    const home = this.line.home === 'office' ? ZONES.nursery : ZONES[this.line.home];
-    const p = randomWalkableIn(this.world.walkable, home);
-    this.goTo(p.x, p.y, 1);
+    const home = this.world.areas.get(areaForZone(this.line.home))!;
+    this.goTo(home.id, randomWalkable(home));
   }
 
   canEvolve() {
@@ -167,7 +193,7 @@ export class Agent {
     const next = target ?? this.nextForm();
     if (!next || next === this.form) return;
     const prev = this.form;
-    this.path = [];
+    this.path = []; this.pending = null;
     this.setState('evolving');
     const s = this.sprite;
     this.scene.tweens.add({
@@ -198,22 +224,18 @@ export class Agent {
 
   // ---- per-frame ----
   update(dt: number) {
-    const speed = 48 * this.getSpeed();
-    if (this.path.length && this.state !== 'evolving') {
-      const n = this.path[0];
-      const tx = n.x * TILE + 8, ty = n.y * TILE + 15;
+    const speed = 40 * this.getSpeed();
+    if (this.warping) { /* tween drives the sprite */ }
+    else if (this.path.length && this.state !== 'evolving') {
+      const n = cellCenter(this.here, this.path[0]);
+      const tx = n.x, ty = n.y;
       const dx = tx - this.sprite.x, dy = ty - this.sprite.y;
       const dist = Math.hypot(dx, dy), step = speed * dt;
       this.facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : dy > 0 ? 'down' : 'up';
       if (dist <= step) { this.sprite.setPosition(tx, ty); this.path.shift(); }
       else this.sprite.setPosition(this.sprite.x + (dx / dist) * step, this.sprite.y + (dy / dist) * step);
       this.play(`walk_${this.facing}`);
-      if (!this.path.length && this.pending) {
-        // reached the stairs: switch storey and continue
-        const p = this.pending;
-        this.storey = p.storey;
-        this.goTo(p.x, p.y, p.storey);
-      }
+      if (!this.path.length && this.pending) this.warp();
       if (!this.path.length && this.state === 'assigned') this.facing = this.desk.facing;
     } else if (this.state === 'working') this.play('work');
     else if (this.state === 'waiting_input') this.play('happy');
@@ -233,8 +255,7 @@ export class Agent {
     if ((this.state === 'assigned' || this.state === 'working') && this.task) text = `${text} ${this.task.length > 12 ? this.task.slice(0, 11) + '…' : this.task}`;
     this.bubble.setText(text).setPosition(this.sprite.x, top - 4).setDepth(16000);
     this.bubble.setBackgroundColor(this.state === 'blocked' ? '#ff6b6b' : this.state === 'waiting_input' ? '#ffe680' : '#ffffff');
-    this.label.setPosition(this.sprite.x, this.sprite.y + 1).setDepth(15999);
-    for (const o of [this.bubble, this.label, this.bar]) o.setAlpha(1 - this.hidden);
+    this.label.setPosition(this.sprite.x, this.sprite.y + 1).setDepth(15999).setAlpha(this.sprite.alpha);
     for (const o of [this.sprite, this.bubble, this.label, this.bar]) o.setVisible(this.shown && (o !== this.bubble || !!text));
     this.bar.clear().setDepth(16000);
     if (this.state === 'working') {
