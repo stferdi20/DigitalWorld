@@ -12,11 +12,24 @@ npm run dev        # http://localhost:5173
 **Controls**
 - Drag to pan, scroll wheel to zoom.
 - Click a Digimon (or a name in the list) to open its panel.
-- `R` / **Roof** cycles on → off → auto. Auto hides the roof when you hover over the office or zoom in.
-- `W` / **Walls** cycles full → cutaway → hidden (Sims style).
+- **▲▼** (or `PgUp`/`PgDn`) switches the DigiLab between the main floor and the executive floor. Ultimate and Mega Digimon work upstairs.
 - **Speed** sets 1× / 2× / 4×. **Dark digivolution** lets agents that fail often take the dark branch, e.g. Greymon → SkullGreymon.
 
-Until real sprites are added, every Digimon is drawn as a coloured placeholder, and the world is a placeholder map built in code (`src/world/map.ts`).
+Without the local Dusk assets, Digimon are coloured placeholders and the maps are plain floors.
+
+## Digimon World Dusk maps
+
+The world is made of real Dusk maps exported from **your own ROM**:
+- the DigiLab (map 006) as the main floor and its purple twin (028) as the executive floor
+- Digi-Farm islands around it: Server (054), Dark (061), Nursery (057) and Training (055)
+
+```bash
+pip install ndspy pillow
+python3 tools/dusk/export_maps.py "Digimon World - Dusk (USA).nds"         # → public/assets/packs/dusk-maps (gitignored)
+python3 tools/dusk/export_maps.py "Digimon World - Dusk (USA).nds" 12 152  # export other maps too
+```
+
+Each map gets an 8px walk grid decoded from the game's floor mask (`.0t`). Digimon walk on real floor and warp between maps. To change which map is used where, edit `AREAS` in `src/world/map.ts`.
 
 ## Digimon World Dusk sprites
 

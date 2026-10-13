@@ -161,6 +161,7 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 - ✅ M0 pipeline: sprite manifest format, `slice`/`pack` tools, roster for 9 lines (sprites themselves still to be downloaded, since The Spriters Resource is blocked from the cloud sandbox)
 - ✅ M1–M5 prototype on placeholders: world with 4 farms, roof/wall toggles, agents + pathfinding, state bubbles, hire/assign/fire UI, task board, evolution + dark evolution, mock source
 - ✅ Real Dusk overworld sprites: 423 sets imported locally (gitignored), mirrored walk cycles, Digidex picker + export, hire-from-Digidex
+- ✅ Real Dusk maps: DigiLab office (main + executive floor) and 4 Digi-Farm islands exported from the ROM, walk grids from the game's floor masks, DS-style warps between maps (replaces the code-drawn map; roof/wall toggles dropped since Dusk interiors are already cutaway)
 - ⏭ Next: finish the form→sprite mapping (Lucemon line, skull/machine megas), Dusk tilesets in Tiled (replacing `src/world/map.ts`), multi-storey selector
 
 ## 10. Open questions
