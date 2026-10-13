@@ -49,6 +49,7 @@ def main():
     src = sys.argv[1]
     os.makedirs(os.path.join(ROOT, 'pmd'), exist_ok=True)
     sprites = []
+    seen = set()
     for folder in sorted(os.listdir(src)):
         path = os.path.join(src, folder)
         m = re.match(r'(\d+)_(.*)', folder)
@@ -95,6 +96,9 @@ def main():
             walk = anims['Walk']['durs']
             fps = max(4, min(12, round(60 / (sum(walk) / len(walk)))))
             sid = 'pmd_' + name.lower()
+            if sid in seen:  # female / alternate forms share a name: keep both
+                sid, name = f'{sid}_{m.group(1)}', f'{name} ({m.group(1)})'
+            seen.add(sid)
             atlas.save(os.path.join(ROOT, 'pmd', f'{sid}.png'))
             sprites.append(dict(id=sid, name=name, sheet=f'{sid}.png', frame=[cell, cell], anchor=[0.5, 0.8],
                                 scale=1, fps=fps, anims=out, thumb=out['idle_down'][0]))
