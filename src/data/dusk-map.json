@@ -21,5 +21,19 @@
   "megaman_exe": "bn5_man80",
   "machop": "pmd_machop",
   "machoke": "pmd_machoke",
-  "machamp": "pmd_machamp"
+  "machamp": "pmd_machamp",
+  "larvitar": "pmd_larvitar",
+  "pupitar": "pmd_pupitar",
+  "tyranitar": "pmd_tyranitar",
+  "riolu": "pmd_riolu",
+  "lucario": "pmd_lucario",
+  "houndour": "pmd_houndour",
+  "houndoom": "pmd_houndoom",
+  "beldum": "pmd_beldum",
+  "metang": "pmd_metang",
+  "metagross": "pmd_metagross",
+  "porygon": "pmd_porygon",
+  "porygon2": "pmd_porygon2",
+  "porygonz": "pmd_porygonz",
+  "darkrai": "pmd_darkrai"
 }

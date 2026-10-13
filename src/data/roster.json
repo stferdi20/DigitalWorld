@@ -370,6 +370,124 @@
           "stage": "rookie"
         }
       ]
+    },
+    {
+      "id": "larvitar",
+      "name": "Larvitar line (Pok\u00e9mon)",
+      "home": "training",
+      "color": "#a8b820",
+      "forms": [
+        {
+          "id": "larvitar",
+          "name": "Larvitar",
+          "stage": "rookie"
+        },
+        {
+          "id": "pupitar",
+          "name": "Pupitar",
+          "stage": "champion"
+        },
+        {
+          "id": "tyranitar",
+          "name": "Tyranitar",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "riolu",
+      "name": "Riolu line (Pok\u00e9mon)",
+      "home": "training",
+      "color": "#3a6ec8",
+      "forms": [
+        {
+          "id": "riolu",
+          "name": "Riolu",
+          "stage": "rookie"
+        },
+        {
+          "id": "lucario",
+          "name": "Lucario",
+          "stage": "champion"
+        }
+      ]
+    },
+    {
+      "id": "houndour",
+      "name": "Houndour line (Pok\u00e9mon)",
+      "home": "dark",
+      "color": "#3a3030",
+      "forms": [
+        {
+          "id": "houndour",
+          "name": "Houndour",
+          "stage": "rookie"
+        },
+        {
+          "id": "houndoom",
+          "name": "Houndoom",
+          "stage": "champion"
+        }
+      ]
+    },
+    {
+      "id": "beldum",
+      "name": "Beldum line (Pok\u00e9mon)",
+      "home": "machine",
+      "color": "#4a78b8",
+      "forms": [
+        {
+          "id": "beldum",
+          "name": "Beldum",
+          "stage": "rookie"
+        },
+        {
+          "id": "metang",
+          "name": "Metang",
+          "stage": "champion"
+        },
+        {
+          "id": "metagross",
+          "name": "Metagross",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "porygon",
+      "name": "Porygon line (Pok\u00e9mon)",
+      "home": "machine",
+      "color": "#f080a0",
+      "forms": [
+        {
+          "id": "porygon",
+          "name": "Porygon",
+          "stage": "rookie"
+        },
+        {
+          "id": "porygon2",
+          "name": "Porygon2",
+          "stage": "champion"
+        },
+        {
+          "id": "porygonz",
+          "name": "Porygonz",
+          "stage": "ultimate"
+        }
+      ]
+    },
+    {
+      "id": "darkrai",
+      "name": "Darkrai (Pok\u00e9mon)",
+      "home": "dark",
+      "color": "#202028",
+      "forms": [
+        {
+          "id": "darkrai",
+          "name": "Darkrai",
+          "stage": "mega"
+        }
+      ]
     }
   ]
 }
