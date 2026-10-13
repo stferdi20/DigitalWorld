@@ -156,6 +156,12 @@ Key idea: the office only reacts to **events** (`agent.spawn`, `task.assigned`, 
 7. **M6 Polish:** Digital World tint, sounds (optional), save layout to localStorage.
 8. **M7 (later)** Claude hooks bridge to mod.
 
+## Progress
+
+- ✅ M0 pipeline: sprite manifest format, `slice`/`pack` tools, roster for 9 lines (sprites themselves still to be downloaded, since The Spriters Resource is blocked from the cloud sandbox)
+- ✅ M1–M5 prototype on placeholders: world with 4 farms, roof/wall toggles, agents + pathfinding, state bubbles, hire/assign/fire UI, task board, evolution + dark evolution, mock source
+- ⏭ Next: real Dusk sprites, Dusk tilesets in Tiled (replacing `src/world/map.ts`), multi-storey selector
+
 ## 10. Open questions
 
 - None blocking. Next step: M0 (assets and sprite manifest).

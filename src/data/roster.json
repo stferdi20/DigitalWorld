@@ -1,0 +1,56 @@
+{
+  "lines": [
+    { "id": "veemon", "name": "Veemon line", "home": "training", "color": "#3a7bff",
+      "forms": [
+        { "id": "chibomon", "name": "Chibomon", "stage": "in-training" },
+        { "id": "veemon", "name": "Veemon", "stage": "rookie" },
+        { "id": "exveemon", "name": "ExVeemon", "stage": "champion" },
+        { "id": "paildramon", "name": "Paildramon", "stage": "ultimate" },
+        { "id": "imperialdramon", "name": "Imperialdramon", "stage": "mega" } ] },
+    { "id": "lucemon", "name": "Lucemon line", "home": "dark", "color": "#f2e6c8",
+      "forms": [
+        { "id": "lucemon", "name": "Lucemon", "stage": "rookie" },
+        { "id": "lucemon_fm", "name": "Lucemon Falldown Mode", "stage": "ultimate" },
+        { "id": "lucemon_sm", "name": "Lucemon Satan Mode", "stage": "mega" } ] },
+    { "id": "impmon", "name": "Impmon line", "home": "dark", "color": "#7a2f8f",
+      "forms": [
+        { "id": "impmon", "name": "Impmon", "stage": "rookie" },
+        { "id": "beelzemon", "name": "Beelzemon", "stage": "mega" } ] },
+    { "id": "agumon", "name": "Agumon line", "home": "training", "color": "#f0a020",
+      "forms": [
+        { "id": "koromon", "name": "Koromon", "stage": "in-training" },
+        { "id": "agumon", "name": "Agumon", "stage": "rookie" },
+        { "id": "greymon", "name": "Greymon", "stage": "champion" },
+        { "id": "metalgreymon", "name": "MetalGreymon", "stage": "ultimate" },
+        { "id": "wargreymon", "name": "WarGreymon", "stage": "mega" } ],
+      "dark": { "from": "greymon", "to": { "id": "skullgreymon", "name": "SkullGreymon", "stage": "ultimate" } } },
+    { "id": "hagurumon", "name": "Hagurumon line", "home": "machine", "color": "#9aa3ad",
+      "forms": [
+        { "id": "hagurumon", "name": "Hagurumon", "stage": "rookie" },
+        { "id": "guardromon", "name": "Guardromon", "stage": "champion" },
+        { "id": "andromon", "name": "Andromon", "stage": "ultimate" },
+        { "id": "hiandromon", "name": "HiAndromon", "stage": "mega" } ] },
+    { "id": "blackagumon", "name": "BlackAgumon line", "home": "machine", "color": "#3b3f46",
+      "forms": [
+        { "id": "blackagumon", "name": "BlackAgumon", "stage": "rookie" },
+        { "id": "darktyrannomon", "name": "DarkTyrannomon", "stage": "champion" },
+        { "id": "metaltyrannomon", "name": "MetalTyrannomon", "stage": "ultimate" },
+        { "id": "machinedramon", "name": "Machinedramon", "stage": "mega" } ] },
+    { "id": "candlemon", "name": "Candlemon line", "home": "dark", "color": "#e8603c",
+      "forms": [
+        { "id": "candlemon", "name": "Candlemon", "stage": "rookie" },
+        { "id": "wizardmon", "name": "Wizardmon", "stage": "champion" },
+        { "id": "skullsatamon", "name": "SkullSatamon", "stage": "ultimate" },
+        { "id": "piedmon", "name": "Piedmon", "stage": "mega" } ] },
+    { "id": "kokuwamon", "name": "Kokuwamon line", "home": "machine", "color": "#c9d2da",
+      "forms": [
+        { "id": "kokuwamon", "name": "Kokuwamon", "stage": "rookie" },
+        { "id": "datamon", "name": "Datamon", "stage": "ultimate" } ] },
+    { "id": "demidevimon", "name": "DemiDevimon line", "home": "dark", "color": "#4b2a5e",
+      "forms": [
+        { "id": "demidevimon", "name": "DemiDevimon", "stage": "rookie" },
+        { "id": "devimon", "name": "Devimon", "stage": "champion" },
+        { "id": "myotismon", "name": "Myotismon", "stage": "ultimate" } ],
+      "dark": { "from": "devimon", "to": { "id": "skullmeramon", "name": "SkullMeramon", "stage": "ultimate" } } }
+  ]
+}

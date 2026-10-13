@@ -1,0 +1,21 @@
+{
+  "name": "digitalworld",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "slice": "node tools/slice.mjs",
+    "pack": "node tools/pack.mjs"
+  },
+  "dependencies": {
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "pngjs": "7.0.0",
+    "typescript": "5.9.3",
+    "vite": "7.1.12"
+  }
+}
