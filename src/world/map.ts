@@ -131,15 +131,15 @@ export function buildWorld(scene: Phaser.Scene): World {
   const spots: Spot[] = [];
   let n = 0;
   for (const row of [OFFICE.y + 3, OFFICE.y + 7, OFFICE.y + 11]) {
-    for (const col of [OFFICE.x + 2, OFFICE.x + 6, OFFICE.x + 10]) {
+    for (const col of [OFFICE.x + 1, OFFICE.x + 4, OFFICE.x + 7, OFFICE.x + 10]) {
       furniture.fillStyle(0x7a5a3a).fillRect(px(col), px(row) + 4, px(2), 12);
       furniture.fillStyle(0x111822).fillRect(px(col) + 4, px(row) - 4, 12, 10);
       furniture.fillStyle(0x35e0ff).fillRect(px(col) + 5, px(row) - 3, 10, 7);
       furniture.fillStyle(0x111822).fillRect(px(col) + 20, px(row) - 2, 10, 8);
       furniture.fillStyle(0x7dff9a).fillRect(px(col) + 21, px(row) - 1, 8, 5);
       block(col, row); block(col + 1, row);
+      // One seat per desk: Dusk sprites are 2 tiles wide, so neighbours would overlap.
       spots.push({ id: `desk-${++n}`, x: col, y: row + 1, facing: 'up', zone: 'office', kind: 'desk' });
-      spots.push({ id: `desk-${++n}`, x: col + 1, y: row + 1, facing: 'up', zone: 'office', kind: 'desk' });
     }
   }
   // meeting table

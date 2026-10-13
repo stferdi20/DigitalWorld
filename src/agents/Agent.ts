@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { STAGES, type AnimName, type DigimonForm, type EvolutionLine, type Facing, type Role } from '../data/types';
-import { animKey, spriteInfo } from '../world/sprites';
+import { animFor, spriteFor } from '../world/sprites';
 import { TILE, ZONES, findPath, randomWalkableIn, type Spot } from '../world/map';
 
 export type AgentState = 'idle' | 'assigned' | 'thinking' | 'working' | 'waiting_input' | 'blocked' | 'done' | 'evolving';
@@ -47,7 +47,7 @@ export class Agent {
   ) {
     this.form = line.forms.find((f) => f.id === formId) ?? line.forms.find((f) => f.stage === 'rookie') ?? line.forms[0];
     const start = randomWalkableIn(walk, ZONES.nursery);
-    this.sprite = scene.add.sprite(start.x * TILE + 8, start.y * TILE + 16, spriteInfo(this.form.id).key)
+    this.sprite = scene.add.sprite(start.x * TILE + 8, start.y * TILE + 16, spriteFor(this.form.id).key)
       .setInteractive({ useHandCursor: true });
     this.applyForm();
     this.label = scene.add.text(0, 0, name, { fontFamily: 'monospace', fontSize: '7px', color: '#fff', backgroundColor: '#0008' })
@@ -62,15 +62,17 @@ export class Agent {
   get stageIndex() { return STAGES.indexOf(this.form.stage); }
   get xpNeeded() { return XP_TO_EVOLVE[this.stageIndex] ?? Infinity; }
 
-  private applyForm() {
-    const info = spriteInfo(this.form.id);
+  /** Re-read the sprite for the current form (after a Digidex pick). */
+  applyForm() {
+    const info = spriteFor(this.form.id);
     this.sprite.setTexture(info.key).setOrigin(...info.anchor).setScale(info.scale);
     this.play(`idle_${this.facing}`);
   }
 
   private play(anim: AnimName) {
-    const k = animKey(this.form.id, anim);
-    if (this.sprite.anims.currentAnim?.key !== k) this.sprite.play(k);
+    const { key, flip } = animFor(this.form.id, anim);
+    this.sprite.setFlipX(flip);
+    if (this.sprite.anims.currentAnim?.key !== key) this.sprite.play(key);
   }
 
   private say(line: string) {

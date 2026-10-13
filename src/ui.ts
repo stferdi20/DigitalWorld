@@ -1,5 +1,6 @@
 import type { Agent } from './agents/Agent';
-import { LINES, allForms, lineById } from './data/roster';
+import { LINES, addCustomLine, allForms, lineById } from './data/roster';
+import { allSprites, currentMapping, setSpriteFor, spriteFor, type SpriteInfo } from './world/sprites';
 import { ROLES, SENIORITY, type Role } from './data/types';
 import type { OfficeScene } from './scenes/OfficeScene';
 
@@ -23,12 +24,30 @@ export function mountUI(scene: OfficeScene) {
     <select id="h-role">${ROLES.map((r) => `<option>${r}</option>`).join('')}</select>
     <input id="h-name" placeholder="agent name (optional)">
     <button id="h-go">Hire</button>
+    <button id="h-dex">Hire from Digidex…</button>
     <h3>AGENTS</h3>
     <div id="list"></div>
   </div>
   <div id="right" class="panel" hidden></div>
   <div id="board" class="panel"><div><h4>DOING</h4><div id="doing"></div></div><div><h4>DONE</h4><div id="done"></div></div></div>
+  <div id="dex" class="panel" hidden>
+    <div class="dex-head"><b id="dex-title">DIGIDEX</b>
+      <input id="dex-q" placeholder="filter: #0147, 64, …" size="16">
+      <button id="dex-export" title="Download your picks as dusk-map.json">Export picks</button>
+      <button id="dex-reset">Use default</button>
+      <button id="dex-close">✕</button></div>
+    <div id="dex-grid"></div>
+  </div>
   <style>
+    [hidden] { display: none !important; }
+    #dex { inset: 60px 220px 120px 220px; display: flex; flex-direction: column; z-index: 10; }
+    .dex-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    #dex-grid { flex: 1; overflow: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 4px; margin-top: 6px; }
+    .dx { background: #1f5f4a; border: 1px solid transparent; border-radius: 3px; cursor: pointer; text-align: center; padding: 2px; }
+    .dx:hover { border-color: #ffe680; } .dx.cur { border-color: #7dff9a; background: #2f7f5a; }
+    .dx i { display: block; margin: 0 auto; image-rendering: pixelated; background-repeat: no-repeat; }
+    .dx span { font-size: 9px; color: #ffe680; }
+    @media (max-width: 700px) { #dex { inset: 60px 8px 120px 8px; } }
     .panel { position: fixed; background: #0b1630e6; color: #dff6ff; font: 11px monospace; border: 2px solid #35e0ff;
       border-radius: 4px; padding: 6px; box-shadow: 0 0 0 2px #050a14; }
     .panel button, .panel select, .panel input { font: 11px monospace; background: #14233a; color: #dff6ff;
@@ -105,6 +124,7 @@ export function mountUI(scene: OfficeScene) {
       <div>XP ${a.xp}/${Number.isFinite(a.xpNeeded) ? a.xpNeeded : '—'} · tasks ${a.completed} · errors ${a.errors}</div>
       <div class="xp"><i style="width:${Math.min(100, (a.xp / a.xpNeeded) * 100) || 0}%"></i></div>
       ${a.task ? `<div>task: ${esc(a.task)} (${Math.round(a.progress * 100)}%)</div>` : ''}
+      <button id="a-dex">Pick ${esc(a.form.name)} sprite (Digidex)</button>
       <button id="a-evo" ${next ? '' : 'disabled'}>Digivolve${next ? ` → ${esc(next.name)}` : ''}</button>
       <div>change Digimon:
         <select id="a-form">${forms.map(({ form, line }) =>
@@ -114,6 +134,9 @@ export function mountUI(scene: OfficeScene) {
       <div class="log">${a.log.slice().reverse().map((l) => `<div>${esc(l)}</div>`).join('')}</div>`;
     $<HTMLSelectElement>('#a-role').onchange = (e) => { a.role = (e.target as HTMLSelectElement).value as Role; };
     $('#a-evo').onclick = () => a.evolve();
+    $('#a-dex').onclick = () => openDex(`PICK SPRITE FOR ${a.form.name.toUpperCase()}`, a.form.id, (s) => {
+      setSpriteFor(a.form.id, s.id); reskin(a.form.id);
+    });
     $<HTMLSelectElement>('#a-form').onchange = (e) => {
       const [lineId, formId] = (e.target as HTMLSelectElement).value.split('|');
       a.line = lineById(lineId);
@@ -128,6 +151,55 @@ export function mountUI(scene: OfficeScene) {
     $('#a-fire').onclick = () => scene.fire(a.id);
     refresh();
   }
+
+  // ---- Digidex: pick a Dusk sprite for a form, or hire one directly ----
+  let dexPick: ((s: SpriteInfo) => void) | null = null;
+  let dexForm: string | null = null;
+  function openDex(title: string, formId: string | null, pick: (s: SpriteInfo) => void) {
+    dexPick = pick; dexForm = formId;
+    $('#dex-title').textContent = title;
+    $('#dex-reset').hidden = !formId;
+    $('#dex').hidden = false;
+    drawDex();
+  }
+  function drawDex() {
+    const q = $<HTMLInputElement>('#dex-q').value.trim().replace('#', '');
+    const cur = dexForm ? spriteFor(dexForm).id : '';
+    const list = allSprites().filter((s) => !q || s.id.includes(q) || String(s.frame[0]) === q || String(s.frame[1]) === q);
+    $('#dex-grid').innerHTML = list.length ? list.map((s) => {
+      const z = s.frame[1] > 32 ? 1 : 2;
+      return `<div class="dx ${s.id === cur ? 'cur' : ''}" data-id="${s.id}"><i style="width:${s.frame[0] * z}px;height:${s.frame[1] * z}px;
+        background-image:url(${s.url});background-size:auto ${s.frame[1] * z}px;background-position:-${s.thumb * s.frame[0] * z}px 0"></i>
+        <span>#${s.id.replace(/^\D+_/, '')}</span></div>`;
+    }).join('') : '<p>No sprite packs loaded. Run <code>npm run import-dusk -- &lt;overworld dir&gt;</code>.</p>';
+    $('#dex-grid').querySelectorAll<HTMLElement>('.dx').forEach((el) => (el.onclick = () => {
+      const s = allSprites().find((x) => x.id === el.dataset.id);
+      if (s && dexPick) dexPick(s);
+      $('#dex').hidden = true;
+    }));
+  }
+  $('#dex-q').oninput = drawDex;
+  $('#dex-close').onclick = () => { $('#dex').hidden = true; };
+  $('#dex-reset').onclick = () => {
+    if (!dexForm) return;
+    setSpriteFor(dexForm, null); reskin(dexForm); $('#dex').hidden = true;
+  };
+  $('#dex-export').onclick = () => {
+    const blob = new Blob([JSON.stringify(currentMapping(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dusk-map.json'; a.click();
+  };
+  const reskin = (formId: string) => {
+    for (const a of scene.agents.values()) if (a.form.id === formId) a.applyForm();
+    if (scene.selected) showAgent(scene.selected);
+  };
+  $('#h-dex').onclick = () => openDex('HIRE FROM DIGIDEX', null, (s) => {
+    const name = `#${s.id.replace(/^\D+_/, '')}`;
+    const line = addCustomLine(name);
+    setSpriteFor(line.forms[0].id, s.id);
+    const a = scene.hire(line.id, undefined, $<HTMLSelectElement>('#h-role').value as Role,
+      $<HTMLInputElement>('#h-name').value || undefined);
+    if (!a) alert('No free desks!'); else scene.select(a);
+  });
 
   scene.onAgentsChanged = refresh;
   scene.onSelect = (a) => {

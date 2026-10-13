@@ -16,6 +16,10 @@ export interface SpriteManifest {
   scale?: number;             // default 1
   fps?: number;               // default 6
   anims: Partial<Record<AnimName, number[]>>;
+  /** Anims drawn by horizontally flipping another, e.g. walk_right → walk_left. */
+  mirror?: Partial<Record<AnimName, AnimName>>;
+  /** Frame index to use as the picker thumbnail. */
+  thumb?: number;
 }
 
 export interface PackManifest {

@@ -1,2 +1,8 @@
 node_modules
 dist
+# Ripped game art is copyrighted: keep it local only.
+.dusk/
+assets-raw/*
+!assets-raw/.gitkeep
+public/assets/packs/*
+!public/assets/packs/README.md

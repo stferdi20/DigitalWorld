@@ -16,3 +16,12 @@ export function allForms(): { form: DigimonForm; line: EvolutionLine }[] {
     ...(line.dark ? [{ form: line.dark.to, line }] : []),
   ]);
 }
+
+let customN = 0;
+/** A one-form line for hiring any sprite straight from the Digidex. */
+export function addCustomLine(name: string): EvolutionLine {
+  const id = `custom_${++customN}`;
+  const line: EvolutionLine = { id, name, home: 'training', color: '#888888', forms: [{ id, name, stage: 'rookie' }] };
+  LINES.push(line);
+  return line;
+}

@@ -18,22 +18,23 @@ npm run dev        # http://localhost:5173
 
 Until real sprites are added, every Digimon is drawn as a coloured placeholder, and the world is a placeholder map built in code (`src/world/map.ts`).
 
-## Adding real sprites (Digimon World Dusk / Dawn / DS)
+## Digimon World Dusk sprites
 
-1. Download sprite sheets from The Spriters Resource (DS → Digimon World Dusk / Dawn / Digimon World DS) and put them in `assets-raw/`.
-   If a sheet has many Digimon on it, crop one Digimon per file first.
-2. Normalize each sheet into the universal format (uniform frames, feet anchored):
-   ```bash
-   npm run slice -- assets-raw/veemon.png --id veemon            # frame size auto (multiple of 16)
-   npm run slice -- assets-raw/veemon.png --id veemon --frame 32 --bg "#00ff00"
-   ```
-   This prints each detected frame with its index.
-3. Open `public/assets/packs/digimon-dusk/veemon.json` and map frame indices to animations:
-   `idle_down/left/right/up`, `walk_down/left/right/up`, `work`, `happy`, `hurt`. Missing ones fall back to idle.
-4. Register the pack: `npm run pack -- digimon-dusk`
-5. Reload. The `id` must match a form id in `src/data/roster.json`.
+The Dusk overworld sprites (extracted from your own ROM, see the extraction runbook) are imported locally. They are **gitignored** and never committed, because the art is © Bandai Namco.
 
-Other games (Mega Man, Pokémon…) work the same way. Use `--pack megaman`, and the engine doesn't care which game a sprite came from.
+```bash
+npm run import-dusk -- path/to/out/sprites/overworld   # → public/assets/packs/dusk (~420 sets)
+```
+
+- Sheet layout: frames 0–2 back (idle + walk), 3–5 side facing left (idle + walk), 6 front, 7 crouch, 8 cheer. Right-facing is the left side mirrored. The big 64×64 sets only have frames 0–5.
+- **Which set is which Digimon:** `src/data/dusk-map.json` holds the ones identified so far. For the rest, click an agent, choose **Pick … sprite (Digidex)**, and click a sprite. Picks are saved in your browser. **Export picks** downloads them as `dusk-map.json`; drop that file into `src/data/` to make them the defaults.
+- **Hire from Digidex…** hires any sprite straight away as a one-form agent.
+
+## Other sprite packs (Mega Man, Pokémon…)
+
+1. Put a sheet in `assets-raw/`, then run `npm run slice -- assets-raw/foo.png --id foo --pack megaman`.
+2. Map frame numbers to anims in `public/assets/packs/megaman/foo.json`.
+3. Run `npm run pack -- megaman`.
 
 ## Layout
 
